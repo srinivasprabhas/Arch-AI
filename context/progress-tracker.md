@@ -5,13 +5,26 @@ change.
 
 ## Current Phase
 
-- Completed Feature 02
+- Completed Feature 03
 
 ## Current Goal
 
-- Feature 02: Editor Chrome (navbar + sidebar shell)
+- Feature 03: Auth (Clerk)
 
 ## Completed
+
+- **Feature 03: Auth (Clerk)**
+  - Installed `@clerk/ui` and `@clerk/themes`
+  - Created `proxy.ts` at project root — Next.js 16 proxy (formerly middleware), Clerk `clerkMiddleware` with `createRouteMatcher` using NEXT_PUBLIC_CLERK_SIGN_IN/SIGN_UP_URL env vars; protects everything by default
+  - Updated `app/layout.tsx` — ClerkProvider wraps root layout with `@clerk/ui/themes` dark theme; appearance variables use CSS custom properties (no hardcoded colors)
+  - Updated `app/page.tsx` — server component redirects: authenticated → /editor, unauthenticated → /sign-in
+  - Created `app/(auth)/layout.tsx` — public layout group (no EditorShell)
+  - Created `app/(auth)/sign-in/[[...sign-in]]/page.tsx` — two-panel layout: left (logo + tagline + feature list, `hidden lg:flex`), right (centered `<SignIn />`); no gradients, no hero sections
+  - Created `app/(auth)/sign-up/[[...sign-up]]/page.tsx` — same two-panel layout with `<SignUp />`
+  - Created `app/(editor)/layout.tsx` — protected group, wraps with EditorShell (proxy handles auth redirect)
+  - Created `app/(editor)/editor/page.tsx` — placeholder editor content
+  - Updated `components/editor/editor-navbar.tsx` — added `<UserButton />` to navbar right section
+  - `npm run build` passes, 0 TypeScript errors
 
 - **Feature 02: Editor Chrome**
   - Created `components/editor/editor-navbar.tsx` — fixed top bar, sidebar toggle with PanelLeftOpen/PanelLeftClose, left/center/right sections, bg-surface + border-surface-border
@@ -35,7 +48,7 @@ change.
 
 ## Next Up
 
-- Feature 02 (TBD — see feature-specs/)
+- Feature 04 (TBD — see feature-specs/)
 
 ## Open Questions
 
@@ -54,6 +67,11 @@ change.
 - @theme inline maps both shadcn semantic names (--background, --primary, etc.)
   and project-specific names (--color-brand, --color-copy-primary, etc.) so both
   sets of utility classes are available.
+
+## Architecture Decisions (continued)
+
+- Next.js 16 renames `middleware.ts` → `proxy.ts` at project root. Must export a default or `proxy` function. All Clerk middleware logic lives there.
+- Clerk appearance API (v7 + @clerk/ui) uses `theme` (not `baseTheme`) and `colorForeground` / `colorInput` / `colorInputForeground` — not the deprecated `colorText`/`colorInputBackground` names.
 
 ## Session Notes
 
