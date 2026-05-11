@@ -35,10 +35,9 @@ update / :
 
 Add Clerk's built-in user button to the editor navbar right section for profile settings and logout.
 
-Keep Clark's default user menu and profile flows intact. Do not rebuild or heavily customize Clark internals.
+Keep Clerk's default user menu and profile flows intact. Do not rebuild or heavily customize Clerk internals.
 
-Use existing Clark env wires. Do not rename or invent new ones.
-
+Use existing Clerk env vars. Do not rename or invent new ones.
 ### dependencies
 install : @clerk/ui
 

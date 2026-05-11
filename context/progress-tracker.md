@@ -9,9 +9,17 @@ change.
 
 ## Current Goal
 
-- Feature 03: Auth (Clerk)
+- Feature 04 (not started)
 
 ## Completed
+
+- **Feature 04: Project Dialogs & Editor Home**
+  - Created `hooks/use-project-dialogs.ts` — dedicated hook + React context (`ProjectDialogsContext`) managing dialog state, form state, loading state, and mock project data; exports `useProjectDialogs` and `useProjectDialogsContext`
+  - Created `components/editor/project-dialogs.tsx` — three dialogs (Create with live slug preview, Rename with auto-focus + enter-to-submit, Delete with destructive confirm) using `EditorDialog`
+  - Updated `components/editor/editor-shell.tsx` — wraps tree with `ProjectDialogsContext.Provider`, renders `<ProjectDialogs />` outside main layout, adds mobile backdrop scrim (z-10, `bg-black/50`, `md:hidden`) that closes sidebar on tap
+  - Updated `components/editor/project-sidebar.tsx` — renders project list items (owned + shared tabs), hover-revealed Rename/Delete icon buttons (owned only, hidden on shared), New Project button wired to `openCreate`
+  - Updated `app/(editor)/editor/page.tsx` — client component with heading, description, New Project button wired to `openCreate` via context
+  - `npx tsc --noEmit`: 0 errors; ESLint: 0 errors
 
 - **Feature 03: Auth (Clerk)**
   - Installed `@clerk/ui` and `@clerk/themes`
@@ -48,7 +56,7 @@ change.
 
 ## Next Up
 
-- Feature 04 (TBD — see feature-specs/)
+- (tbd)
 
 ## Open Questions
 

@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit -m '*)",
+      "Bash(git push *)",
+      "Bash(Select-Object Name)",
+      "Bash(npm run *)",
+      "Bash(xargs grep *)",
+      "Bash(git branch *)"
+    ]
+  }
+}

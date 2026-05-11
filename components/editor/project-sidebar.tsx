@@ -1,9 +1,10 @@
 "use client"
 
-import { FolderOpen, Plus, X } from "lucide-react"
+import { FolderOpen, Pencil, Plus, Trash2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
+import { type Project, useProjectDialogsContext } from "@/hooks/use-project-dialogs"
 
 interface ProjectSidebarProps {
   isOpen: boolean
@@ -20,7 +21,40 @@ function EmptyPlaceholder({ label }: { label: string }) {
   )
 }
 
+function ProjectItem({ project }: { project: Project }) {
+  const { openRename, openDelete } = useProjectDialogsContext()
+
+  return (
+    <div className="group flex items-center gap-2 px-2 py-2 rounded-xl hover:bg-elevated transition-colors cursor-pointer">
+      <span className="flex-1 text-sm text-copy-primary truncate">{project.name}</span>
+      {project.isOwned && (
+        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+          <button
+            onClick={(e) => { e.stopPropagation(); openRename(project) }}
+            aria-label={`Rename ${project.name}`}
+            className="p-1 rounded-lg text-copy-muted hover:text-copy-primary hover:bg-subtle transition-colors"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); openDelete(project) }}
+            aria-label={`Delete ${project.name}`}
+            className="p-1 rounded-lg text-copy-muted hover:text-state-error hover:bg-subtle transition-colors"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function ProjectSidebar({ isOpen, onClose, className }: ProjectSidebarProps) {
+  const { projects, openCreate } = useProjectDialogsContext()
+
+  const ownedProjects = projects.filter((p) => p.isOwned)
+  const sharedProjects = projects.filter((p) => !p.isOwned)
+
   return (
     <aside
       className={cn(
@@ -52,18 +86,35 @@ export function ProjectSidebar({ isOpen, onClose, className }: ProjectSidebarPro
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="my-projects" className="flex-1 overflow-y-auto px-4 mt-0">
-          <EmptyPlaceholder label="projects" />
+        <TabsContent value="my-projects" className="flex-1 overflow-y-auto px-2 mt-2">
+          {ownedProjects.length === 0 ? (
+            <EmptyPlaceholder label="projects" />
+          ) : (
+            <div className="flex flex-col gap-0.5 py-1">
+              {ownedProjects.map((p) => (
+                <ProjectItem key={p.id} project={p} />
+              ))}
+            </div>
+          )}
         </TabsContent>
 
-        <TabsContent value="shared" className="flex-1 overflow-y-auto px-4 mt-0">
-          <EmptyPlaceholder label="shared projects" />
+        <TabsContent value="shared" className="flex-1 overflow-y-auto px-2 mt-2">
+          {sharedProjects.length === 0 ? (
+            <EmptyPlaceholder label="shared projects" />
+          ) : (
+            <div className="flex flex-col gap-0.5 py-1">
+              {sharedProjects.map((p) => (
+                <ProjectItem key={p.id} project={p} />
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
       <div className="p-4 border-t border-surface-border shrink-0">
         <Button
           variant="outline"
+          onClick={openCreate}
           className="w-full gap-2 border-surface-border text-copy-primary hover:bg-elevated"
         >
           <Plus className="h-4 w-4" />
