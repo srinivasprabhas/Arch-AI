@@ -13,6 +13,13 @@ change.
 
 ## Completed
 
+- **Feature 05: Prisma Data Models & Client**
+  - Created `prisma/models/project.prisma` — `Project` (ownerId, name, description?, status enum DRAFT/ARCHIVED, canvasJsonPath?, timestamps, indexes on ownerId + createdAt) and `ProjectCollaborator` (projectId cascade, email, createdAt, unique on project/email, indexes on email + project/date)
+  - Created `lib/prisma.ts` — cached singleton; branches on `DATABASE_URL` prefix: `prisma+postgres://` → `withAccelerate()` extension, otherwise `PrismaPg` adapter; cached on `globalThis` in development
+  - Installed `@prisma/extension-accelerate`
+  - Ran `prisma migrate dev --name init-projects`; migration applied and client generated to `app/generated/prisma`
+  - `npm run build` passes, 0 TypeScript errors
+
 - **Feature 04: Project Dialogs & Editor Home**
   - Created `hooks/use-project-dialogs.ts` — dedicated hook + React context (`ProjectDialogsContext`) managing dialog state, form state, loading state, and mock project data; exports `useProjectDialogs` and `useProjectDialogsContext`
   - Created `components/editor/project-dialogs.tsx` — three dialogs (Create with live slug preview, Rename with auto-focus + enter-to-submit, Delete with destructive confirm) using `EditorDialog`
