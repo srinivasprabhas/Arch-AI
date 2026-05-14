@@ -11,7 +11,7 @@ export function ProjectDialogs() {
     dialogType,
     activeProject,
     nameInput,
-    slugPreview,
+    roomIdPreview,
     isLoading,
     closeDialog,
     setNameInput,
@@ -23,7 +23,7 @@ export function ProjectDialogs() {
       <CreateProjectDialog
         open={dialogType === "create"}
         nameInput={nameInput}
-        slugPreview={slugPreview}
+        roomIdPreview={roomIdPreview}
         isLoading={isLoading}
         onNameChange={setNameInput}
         onClose={closeDialog}
@@ -54,7 +54,7 @@ export function ProjectDialogs() {
 interface CreateProjectDialogProps {
   open: boolean
   nameInput: string
-  slugPreview: string
+  roomIdPreview: string
   isLoading: boolean
   onNameChange: (name: string) => void
   onClose: () => void
@@ -64,7 +64,7 @@ interface CreateProjectDialogProps {
 function CreateProjectDialog({
   open,
   nameInput,
-  slugPreview,
+  roomIdPreview,
   isLoading,
   onNameChange,
   onClose,
@@ -115,7 +115,7 @@ function CreateProjectDialog({
           className="bg-subtle border-surface-border text-copy-primary placeholder:text-copy-faint"
         />
         <p className="text-xs text-copy-muted font-mono">
-          slug: <span className="text-copy-secondary">{slugPreview || "—"}</span>
+          room id: <span className="text-copy-secondary">{roomIdPreview || "—"}</span>
         </p>
       </div>
     </EditorDialog>

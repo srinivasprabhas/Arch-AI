@@ -50,10 +50,7 @@ function ProjectItem({ project }: { project: Project }) {
 }
 
 export function ProjectSidebar({ isOpen, onClose, className }: ProjectSidebarProps) {
-  const { projects, openCreate } = useProjectDialogsContext()
-
-  const ownedProjects = projects.filter((p) => p.isOwned)
-  const sharedProjects = projects.filter((p) => !p.isOwned)
+  const { ownedProjects, sharedProjects, openCreate } = useProjectDialogsContext()
 
   return (
     <aside

@@ -1,26 +1,24 @@
 "use client"
 
-import { createContext, useCallback, useContext, useState } from "react"
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react"
+import { usePathname, useRouter } from "next/navigation"
+import type { ProjectData } from "@/lib/projects"
 
-export interface Project {
-  id: string
-  name: string
-  slug: string
-  isOwned: boolean
-}
+export type { ProjectData as Project }
 
 export type DialogType = "create" | "rename" | "delete" | null
 
 export interface ProjectDialogsContextValue {
-  projects: Project[]
+  ownedProjects: ProjectData[]
+  sharedProjects: ProjectData[]
   dialogType: DialogType
-  activeProject: Project | null
+  activeProject: ProjectData | null
   nameInput: string
-  slugPreview: string
+  roomIdPreview: string
   isLoading: boolean
   openCreate: () => void
-  openRename: (project: Project) => void
-  openDelete: (project: Project) => void
+  openRename: (project: ProjectData) => void
+  openDelete: (project: ProjectData) => void
   closeDialog: () => void
   setNameInput: (name: string) => void
   handleSubmit: () => void
@@ -34,12 +32,6 @@ export function useProjectDialogsContext(): ProjectDialogsContextValue {
   return ctx
 }
 
-const MOCK_PROJECTS: Project[] = [
-  { id: "1", name: "Cloud Architecture", slug: "cloud-architecture", isOwned: true },
-  { id: "2", name: "Microservices Design", slug: "microservices-design", isOwned: true },
-  { id: "3", name: "Team Infrastructure", slug: "team-infrastructure", isOwned: false },
-]
-
 function toSlug(name: string): string {
   return name
     .toLowerCase()
@@ -50,14 +42,56 @@ function toSlug(name: string): string {
     .replace(/^-|-$/g, "")
 }
 
-export function useProjectDialogs(): ProjectDialogsContextValue {
-  const [projects, setProjects] = useState<Project[]>(MOCK_PROJECTS)
+function shortSuffix(): string {
+  return Math.random().toString(36).slice(2, 7)
+}
+
+function listKey(list: ProjectData[]): string {
+  return list.map((p) => `${p.id}:${p.name}`).join("|")
+}
+
+interface UseProjectDialogsOptions {
+  ownedProjects: ProjectData[]
+  sharedProjects: ProjectData[]
+}
+
+export function useProjectDialogs({
+  ownedProjects: initialOwned,
+  sharedProjects: initialShared,
+}: UseProjectDialogsOptions): ProjectDialogsContextValue {
+  const router = useRouter()
+  const pathname = usePathname()
+
+  const [ownedProjects, setOwnedProjects] = useState<ProjectData[]>(initialOwned)
+  const [sharedProjects, setSharedProjects] = useState<ProjectData[]>(initialShared)
   const [dialogType, setDialogType] = useState<DialogType>(null)
-  const [activeProject, setActiveProject] = useState<Project | null>(null)
+  const [activeProject, setActiveProject] = useState<ProjectData | null>(null)
   const [nameInput, setNameInputState] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [suffix] = useState(shortSuffix)
 
-  const slugPreview = toSlug(nameInput)
+  // After router.refresh() the layout re-renders on the server and passes new props.
+  // useState does not re-initialize from props, so we sync here when the content changes.
+  const prevOwnedKey = useRef(listKey(initialOwned))
+  useEffect(() => {
+    const key = listKey(initialOwned)
+    if (key !== prevOwnedKey.current) {
+      prevOwnedKey.current = key
+      setOwnedProjects(initialOwned)
+    }
+  }, [initialOwned])
+
+  const prevSharedKey = useRef(listKey(initialShared))
+  useEffect(() => {
+    const key = listKey(initialShared)
+    if (key !== prevSharedKey.current) {
+      prevSharedKey.current = key
+      setSharedProjects(initialShared)
+    }
+  }, [initialShared])
+
+  const slug = toSlug(nameInput)
+  const roomIdPreview = slug ? `${slug}-${suffix}` : ""
 
   const openCreate = useCallback(() => {
     setNameInputState("")
@@ -65,13 +99,15 @@ export function useProjectDialogs(): ProjectDialogsContextValue {
     setDialogType("create")
   }, [])
 
-  const openRename = useCallback((project: Project) => {
+  // Store target project id + current name
+  const openRename = useCallback((project: ProjectData) => {
     setNameInputState(project.name)
     setActiveProject(project)
     setDialogType("rename")
   }, [])
 
-  const openDelete = useCallback((project: Project) => {
+  // Store target project
+  const openDelete = useCallback((project: ProjectData) => {
     setActiveProject(project)
     setDialogType("delete")
   }, [])
@@ -86,41 +122,64 @@ export function useProjectDialogs(): ProjectDialogsContextValue {
     setNameInputState(name)
   }, [])
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     setIsLoading(true)
-    setTimeout(() => {
-      const slug = toSlug(nameInput)
-      if (dialogType === "create" && nameInput.trim() && slug) {
-        setProjects((prev) => [
-          ...prev,
-          {
-            id: String(Date.now()),
-            name: nameInput.trim(),
-            slug,
-            isOwned: true,
-          },
-        ])      } else if (dialogType === "rename" && activeProject && nameInput.trim()) {
-        setProjects((prev) =>
-          prev.map((p) =>
-            p.id === activeProject.id
-              ? { ...p, name: nameInput.trim(), slug: toSlug(nameInput) }
-              : p
-          )
-        )
+    try {
+      if (dialogType === "create" && nameInput.trim()) {
+        const res = await fetch("/api/projects", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: nameInput.trim() }),
+        })
+        if (res.ok) {
+          const project: { id: string; name: string } = await res.json()
+          setOwnedProjects((prev) => [{ id: project.id, name: project.name, isOwned: true }, ...prev])
+          closeDialog()
+          // project.id is used as the LiveBlocks room id (kept aligned)
+          router.push(`/editor/${project.id}`)
+        }
+      } else if (dialogType === "rename" && activeProject && nameInput.trim()) {
+        // Call PATCH /api/projects/[id]; refresh on success
+        const res = await fetch(`/api/projects/${activeProject.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: nameInput.trim() }),
+        })
+        if (res.ok) {
+          closeDialog()
+          router.refresh()
+        }
       } else if (dialogType === "delete" && activeProject) {
-        setProjects((prev) => prev.filter((p) => p.id !== activeProject.id))
+        // Call DELETE /api/projects/[id]
+        const targetId = activeProject.id
+        const isActiveWorkspace = pathname === `/editor/${targetId}`
+        const res = await fetch(`/api/projects/${targetId}`, {
+          method: "DELETE",
+        })
+        if (res.ok) {
+          // Remove from sidebar immediately on confirmed delete, then sync server state
+          setOwnedProjects((prev) => prev.filter((p) => p.id !== targetId))
+          closeDialog()
+          // Redirect to /editor if deleting the active workspace, otherwise refresh
+          if (isActiveWorkspace) {
+            router.push("/editor")
+          } else {
+            router.refresh()
+          }
+        }
       }
+    } finally {
       setIsLoading(false)
-      closeDialog()
-    }, 300)
-  }, [dialogType, nameInput, activeProject, closeDialog])
+    }
+  }, [dialogType, nameInput, activeProject, suffix, closeDialog, router, pathname])
 
   return {
-    projects,
+    ownedProjects,
+    sharedProjects,
     dialogType,
     activeProject,
     nameInput,
-    slugPreview,
+    roomIdPreview,
     isLoading,
     openCreate,
     openRename,

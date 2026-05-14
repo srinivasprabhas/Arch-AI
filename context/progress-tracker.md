@@ -13,6 +13,24 @@ change.
 
 ## Completed
 
+- **Feature 07: Wire Editor Home to Real Project API**
+  - Created `lib/projects.ts` — `getOwnedProjects(userId)` and `getSharedProjects(email)` server helpers using Prisma
+  - Converted `app/(editor)/layout.tsx` to an async server component; fetches owned + shared projects via `auth()` + `currentUser()` and passes them as props to `EditorShell`
+  - Updated `components/editor/editor-shell.tsx` — accepts `ownedProjects`/`sharedProjects` props, threads them into `useProjectDialogs`
+  - Replaced mock logic in `hooks/use-project-dialogs.ts` with real API calls: POST `/api/projects` (slug+suffix roomId aligned with project id, navigates to `/editor/[id]`), PATCH `/api/projects/[id]` + `router.refresh()`, DELETE + redirect to `/editor` if active workspace else refresh
+  - Updated POST handler in `app/api/projects/route.ts` to accept optional `id` in body for slug-based room id
+  - Updated `components/editor/project-dialogs.tsx` — create dialog shows room id preview
+  - Updated `components/editor/project-sidebar.tsx` — uses `ownedProjects`/`sharedProjects` directly from context
+  - Created `app/(editor)/editor/[projectId]/page.tsx` — workspace stub (server component, redirects to `/editor` if project not found)
+  - `npm run build` passes, 0 TypeScript errors; all 8 routes in build output
+
+- **Feature 06: Project API Routes**
+  - Created `app/api/projects/route.ts` — GET (list by ownerId, ordered by createdAt desc) + POST (create with default name "Untitled Project"); both return 401 for unauthenticated requests
+  - Created `app/api/projects/[projectId]/route.ts` — PATCH (rename, validates non-empty name) + DELETE (204 no content); both enforce owner check: 401 if unauthenticated, 403 if not owner, 404 if project not found
+  - Added `serverExternalPackages: ["@prisma/client", "@prisma/adapter-pg", "pg"]` to `next.config.ts` to prevent Turbopack from bundling the Prisma runtime
+  - Upgraded `prisma` CLI from v6.19.3 → v7.8.0 to align with `@prisma/client` v7; regenerated client; removed removed `url` from `schema.prisma` datasource block (now managed by `prisma.config.ts`); removed invalid `engine: "classic"` from `prisma.config.ts`
+  - `npm run build` passes, 0 TypeScript errors; all four routes appear in build output
+
 - **Feature 05: Prisma Data Models & Client**
   - Created `prisma/models/project.prisma` — `Project` (ownerId, name, description?, status enum DRAFT/ARCHIVED, canvasJsonPath?, timestamps, indexes on ownerId + createdAt) and `ProjectCollaborator` (projectId cascade, email, createdAt, unique on project/email, indexes on email + project/date)
   - Created `lib/prisma.ts` — cached singleton; branches on `DATABASE_URL` prefix: `prisma+postgres://` → `withAccelerate()` extension, otherwise `PrismaPg` adapter; cached on `globalThis` in development
