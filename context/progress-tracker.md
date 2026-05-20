@@ -5,13 +5,24 @@ change.
 
 ## Current Phase
 
-- Completed Feature 03
+- Completed Feature 08
 
 ## Current Goal
 
-- Feature 04 (not started)
+- Next feature (tbd)
 
 ## Completed
+
+- **Feature 08: Editor Workspace Shell**
+  - Created `lib/project-access.ts` — `getCurrentClerkIdentity()` (returns `{userId, email}` from `auth()` + `currentUser()`) and `checkProjectAccess(projectId)` (returns `unauthenticated` | `denied` | `granted` with project info; grants access when user is owner OR has a `ProjectCollaborator` row for their primary email)
+  - Created `components/editor/access-denied.tsx` — centered layout with lock icon, message, and "Back to projects" link to `/editor`
+  - Created `hooks/use-workspace.ts` — `WorkspaceContext` exposing `project`, `setProject`, `isAiSidebarOpen`, `toggleAiSidebar`
+  - Updated `components/editor/editor-shell.tsx` — owns workspace project state + AI sidebar open state, wraps tree with `WorkspaceContext.Provider` (nested inside existing `ProjectDialogsContext.Provider`)
+  - Updated `components/editor/editor-navbar.tsx` — consumes `useWorkspace()`; when a project is active, shows the project name (truncated, left-aligned), a Share button, and an AI sidebar toggle (Sparkles icon, highlights with `bg-accent-dim` + `text-ai-text` when open); falls back to plain navbar otherwise
+  - Updated `components/editor/project-sidebar.tsx` — project rows are now `next/link` to `/editor/[id]`; the row matching the current `usePathname()` segment gets `bg-elevated` + `aria-current="page"` highlight; fixed lingering `hover:text-state-error` → `hover:text-error` token name
+  - Created `components/editor/workspace.tsx` — client component that on mount calls `setProject(project)` (cleanup → `null` on unmount); renders the canvas placeholder (full-bleed dark `bg-base` with centered "Canvas coming soon" copy) and a right-side slide-over `AiSidebar` placeholder (w-80, translate-x animation, header with Sparkles + close button)
+  - Updated `app/(editor)/editor/[projectId]/page.tsx` — server component now calls `checkProjectAccess(projectId)` and dispatches: `unauthenticated` → `redirect("/sign-in")`, `denied` (missing OR not owner/collaborator) → `<AccessDenied />`, `granted` → `<Workspace project={result.project} />`
+  - `npm run build` passes, 0 TypeScript errors; all 8 routes in build output
 
 - **Feature 07: Wire Editor Home to Real Project API**
   - Created `lib/projects.ts` — `getOwnedProjects(userId)` and `getSharedProjects(email)` server helpers using Prisma
