@@ -12,6 +12,9 @@ export interface WorkspaceContextValue {
   setProject: (project: WorkspaceProject | null) => void
   isAiSidebarOpen: boolean
   toggleAiSidebar: () => void
+  isShareDialogOpen: boolean
+  openShareDialog: () => void
+  closeShareDialog: () => void
 }
 
 export const WorkspaceContext = createContext<WorkspaceContextValue | null>(null)

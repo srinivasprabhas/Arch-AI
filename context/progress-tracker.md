@@ -5,13 +5,24 @@ change.
 
 ## Current Phase
 
-- Completed Feature 08
+- Completed Feature 09
 
 ## Current Goal
 
 - Next feature (tbd)
 
 ## Completed
+
+- **Feature 09: Share Dialog**
+  - Created `lib/clerk-users.ts` — `enrichEmails(emails)` uses `clerkClient().users.getUserList({ emailAddress: emails })` to map emails to `{ displayName, imageUrl }`. Wrapped in try/catch — Clerk lookup failures fall back to email-only rows so the UI still renders.
+  - Created `app/api/projects/[projectId]/collaborators/route.ts` — `GET` returns `{ isOwner, collaborators: [{ id, email, displayName?, imageUrl? }] }` (allowed for owner OR collaborator), enriches via Clerk; `POST` invites by email with regex validation, lowercased; 401/403/404 enforced server side, 409 on duplicate (Prisma P2002), 400 if owner tries to invite themselves
+  - Created `app/api/projects/[projectId]/collaborators/[collaboratorId]/route.ts` — `DELETE` enforces owner check + collaborator-belongs-to-project check before deleting, returns 204
+  - Extended `hooks/use-workspace.ts` — added `isShareDialogOpen`, `openShareDialog`, `closeShareDialog` to `WorkspaceContextValue`
+  - Updated `components/editor/editor-shell.tsx` — owns share dialog open state, threads new context values into `WorkspaceContext.Provider`
+  - Updated `components/editor/editor-navbar.tsx` — Share button `onClick={openShareDialog}` from `useWorkspace()`
+  - Created `components/editor/share-dialog.tsx` — fetches collaborators on open; owners see invite form (email + submit) and per-row Remove buttons; collaborators see read-only list; "Copy link" button copies `${origin}/editor/${projectId}` with 2s "Copied!" feedback via Check icon; avatars use Clerk `imageUrl`, fall back to initial circle
+  - Rendered `<ShareDialog />` inside `components/editor/workspace.tsx` so it sees the active project via `useWorkspace()`
+  - `npm run build` passes, 0 TypeScript errors; all 10 routes in build output (two new `/api/projects/[projectId]/collaborators` routes)
 
 - **Feature 08: Editor Workspace Shell**
   - Created `lib/project-access.ts` — `getCurrentClerkIdentity()` (returns `{userId, email}` from `auth()` + `currentUser()`) and `checkProjectAccess(projectId)` (returns `unauthenticated` | `denied` | `granted` with project info; grants access when user is owner OR has a `ProjectCollaborator` row for their primary email)

@@ -18,6 +18,7 @@ export function EditorShell({ children, ownedProjects, sharedProjects }: EditorS
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [workspaceProject, setWorkspaceProject] = useState<WorkspaceProject | null>(null)
   const [isAiSidebarOpen, setIsAiSidebarOpen] = useState(false)
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
   const dialogState = useProjectDialogs({ ownedProjects, sharedProjects })
 
   const setProject = useCallback((project: WorkspaceProject | null) => {
@@ -28,6 +29,9 @@ export function EditorShell({ children, ownedProjects, sharedProjects }: EditorS
     setIsAiSidebarOpen((o) => !o)
   }, [])
 
+  const openShareDialog = useCallback(() => setIsShareDialogOpen(true), [])
+  const closeShareDialog = useCallback(() => setIsShareDialogOpen(false), [])
+
   return (
     <ProjectDialogsContext.Provider value={dialogState}>
       <WorkspaceContext.Provider
@@ -36,6 +40,9 @@ export function EditorShell({ children, ownedProjects, sharedProjects }: EditorS
           setProject,
           isAiSidebarOpen,
           toggleAiSidebar,
+          isShareDialogOpen,
+          openShareDialog,
+          closeShareDialog,
         }}
       >
         <div className="flex flex-col h-full bg-base">
