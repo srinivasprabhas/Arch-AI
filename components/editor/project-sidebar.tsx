@@ -1,5 +1,7 @@
 "use client"
 
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { FolderOpen, Pencil, Plus, Trash2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -21,12 +23,26 @@ function EmptyPlaceholder({ label }: { label: string }) {
   )
 }
 
-function ProjectItem({ project }: { project: Project }) {
+function ProjectItem({ project, isActive }: { project: Project; isActive: boolean }) {
   const { openRename, openDelete } = useProjectDialogsContext()
 
   return (
-    <div className="group flex items-center gap-2 px-2 py-2 rounded-xl hover:bg-elevated transition-colors cursor-pointer">
-      <span className="flex-1 text-sm text-copy-primary truncate">{project.name}</span>
+    <div
+      className={cn(
+        "group flex items-center gap-2 px-2 py-2 rounded-xl transition-colors",
+        isActive ? "bg-elevated" : "hover:bg-elevated"
+      )}
+    >
+      <Link
+        href={`/editor/${project.id}`}
+        className={cn(
+          "flex-1 min-w-0 text-sm truncate",
+          isActive ? "text-copy-primary font-medium" : "text-copy-primary"
+        )}
+        aria-current={isActive ? "page" : undefined}
+      >
+        {project.name}
+      </Link>
       {project.isOwned && (
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
           <button
@@ -39,7 +55,7 @@ function ProjectItem({ project }: { project: Project }) {
           <button
             onClick={(e) => { e.stopPropagation(); openDelete(project) }}
             aria-label={`Delete ${project.name}`}
-            className="p-1 rounded-lg text-copy-muted hover:text-state-error hover:bg-subtle transition-colors"
+            className="p-1 rounded-lg text-copy-muted hover:text-error hover:bg-subtle transition-colors"
           >
             <Trash2 className="h-3.5 w-3.5" />
           </button>
@@ -51,6 +67,8 @@ function ProjectItem({ project }: { project: Project }) {
 
 export function ProjectSidebar({ isOpen, onClose, className }: ProjectSidebarProps) {
   const { ownedProjects, sharedProjects, openCreate } = useProjectDialogsContext()
+  const pathname = usePathname()
+  const activeId = pathname.startsWith("/editor/") ? pathname.slice("/editor/".length) : null
 
   return (
     <aside
@@ -89,7 +107,7 @@ export function ProjectSidebar({ isOpen, onClose, className }: ProjectSidebarPro
           ) : (
             <div className="flex flex-col gap-0.5 py-1">
               {ownedProjects.map((p) => (
-                <ProjectItem key={p.id} project={p} />
+                <ProjectItem key={p.id} project={p} isActive={p.id === activeId} />
               ))}
             </div>
           )}
@@ -101,7 +119,7 @@ export function ProjectSidebar({ isOpen, onClose, className }: ProjectSidebarPro
           ) : (
             <div className="flex flex-col gap-0.5 py-1">
               {sharedProjects.map((p) => (
-                <ProjectItem key={p.id} project={p} />
+                <ProjectItem key={p.id} project={p} isActive={p.id === activeId} />
               ))}
             </div>
           )}
