@@ -6,6 +6,7 @@ import { ProjectSidebar } from "@/components/editor/project-sidebar"
 import { ProjectDialogs } from "@/components/editor/project-dialogs"
 import { ProjectDialogsContext, useProjectDialogs } from "@/hooks/use-project-dialogs"
 import { WorkspaceContext, type WorkspaceProject } from "@/hooks/use-workspace"
+import type { CanvasSaveStatus } from "@/hooks/use-canvas-autosave"
 import type { ProjectData } from "@/lib/projects"
 
 interface EditorShellProps {
@@ -20,6 +21,7 @@ export function EditorShell({ children, ownedProjects, sharedProjects }: EditorS
   const [isAiSidebarOpen, setIsAiSidebarOpen] = useState(false)
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
   const [isStarterTemplatesOpen, setIsStarterTemplatesOpen] = useState(false)
+  const [canvasSaveStatus, setCanvasSaveStatus] = useState<CanvasSaveStatus>("idle")
   const dialogState = useProjectDialogs({ ownedProjects, sharedProjects })
 
   const setProject = useCallback((project: WorkspaceProject | null) => {
@@ -50,6 +52,8 @@ export function EditorShell({ children, ownedProjects, sharedProjects }: EditorS
           isStarterTemplatesOpen,
           openStarterTemplates,
           closeStarterTemplates,
+          canvasSaveStatus,
+          setCanvasSaveStatus,
         }}
       >
         <div className="flex flex-col h-full bg-base">

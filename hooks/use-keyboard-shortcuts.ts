@@ -7,6 +7,7 @@ interface UseKeyboardShortcutsOptions {
   reactFlow: Pick<ReactFlowInstance, "zoomIn" | "zoomOut" | "fitView">
   onUndo: () => void
   onRedo: () => void
+  onDelete?: () => void
 }
 
 const ZOOM_DURATION = 200
@@ -15,6 +16,7 @@ export function useKeyboardShortcuts({
   reactFlow,
   onUndo,
   onRedo,
+  onDelete,
 }: UseKeyboardShortcutsOptions) {
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -41,6 +43,12 @@ export function useKeyboardShortcuts({
 
       if (isMod) return
 
+      if (onDelete && (key === "Delete" || key === "Backspace")) {
+        event.preventDefault()
+        onDelete()
+        return
+      }
+
       if (key === "+" || key === "=") {
         event.preventDefault()
         reactFlow.zoomIn({ duration: ZOOM_DURATION })
@@ -55,7 +63,7 @@ export function useKeyboardShortcuts({
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [reactFlow, onUndo, onRedo])
+  }, [reactFlow, onUndo, onRedo, onDelete])
 }
 
 function isEditableTarget(target: EventTarget | null): boolean {

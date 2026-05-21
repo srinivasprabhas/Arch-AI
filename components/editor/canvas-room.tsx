@@ -11,9 +11,10 @@ import { Canvas } from "@/components/editor/canvas"
 
 interface CanvasRoomProps {
   roomId: string
+  children?: ReactNode
 }
 
-export function CanvasRoom({ roomId }: CanvasRoomProps) {
+export function CanvasRoom({ roomId, children }: CanvasRoomProps) {
   return (
     <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
       <RoomProvider
@@ -25,6 +26,7 @@ export function CanvasRoom({ roomId }: CanvasRoomProps) {
             <Canvas />
           </ClientSideSuspense>
         </CanvasErrorBoundary>
+        {children}
       </RoomProvider>
     </LiveblocksProvider>
   )

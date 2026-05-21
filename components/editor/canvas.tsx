@@ -6,6 +6,7 @@ import "@liveblocks/react-flow/styles.css"
 
 import {
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -29,6 +30,7 @@ import { useLiveblocksFlow } from "@liveblocks/react-flow"
 import {
   useCanRedo,
   useCanUndo,
+  useEventListener,
   useRedo,
   useUndo,
   useUpdateMyPresence,
@@ -47,6 +49,7 @@ import {
 import { ShapePanel } from "@/components/editor/shape-panel"
 import { StarterTemplatesModal } from "@/components/editor/starter-templates-modal"
 import type { CanvasTemplate } from "@/components/editor/starter-templates"
+import { useCanvasAutosave } from "@/hooks/use-canvas-autosave"
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
 import { useWorkspace } from "@/hooks/use-workspace"
 import {
@@ -56,6 +59,7 @@ import {
   type CanvasNode,
   type ShapeDragPayload,
 } from "@/types/canvas"
+import { parseAiStatusEvent } from "@/types/tasks"
 
 const NODE_TYPES: NodeTypes = {
   canvasNode: CanvasNodeRenderer,
@@ -106,10 +110,12 @@ function CanvasInner() {
   const canRedo = useCanRedo()
   const updateMyPresence = useUpdateMyPresence()
   const {
+    project,
     isProjectSidebarOpen,
     isAiSidebarOpen,
     isStarterTemplatesOpen,
     closeStarterTemplates,
+    setCanvasSaveStatus,
   } = useWorkspace()
   const nodeCounterRef = useRef(0)
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null)
@@ -215,11 +221,108 @@ function CanvasInner() {
     fitView({ duration: 200 })
   }, [fitView])
 
+  // When the design agent finishes a run, broadcast `ai-status` "complete"
+  // arrives on the same WebSocket as the Storage updates mutateFlow wrote;
+  // a small tail lets stragglers land before we measure bounds for fitView.
+  const fitViewTimerRef = useRef<number | null>(null)
+  useEventListener(({ event }) => {
+    const parsed = parseAiStatusEvent(event)
+    if (!parsed || parsed.state !== "complete") return
+    if (fitViewTimerRef.current !== null) {
+      window.clearTimeout(fitViewTimerRef.current)
+    }
+    fitViewTimerRef.current = window.setTimeout(() => {
+      fitViewTimerRef.current = null
+      requestAnimationFrame(() => {
+        fitView({ duration: 400, padding: 0.2 })
+      })
+    }, 250)
+  })
+  useEffect(() => {
+    return () => {
+      if (fitViewTimerRef.current !== null) {
+        window.clearTimeout(fitViewTimerRef.current)
+      }
+    }
+  }, [])
+
+  const handleDeleteSelection = useCallback(() => {
+    if (editingNodeId || editingEdgeId) return
+
+    const selectedNodes = reactFlow
+      .getNodes()
+      .filter((n): n is CanvasNode => Boolean(n.selected))
+    const selectedEdges = reactFlow
+      .getEdges()
+      .filter((e): e is CanvasEdge => Boolean(e.selected))
+
+    if (selectedNodes.length === 0 && selectedEdges.length === 0) return
+
+    onDelete({ nodes: selectedNodes, edges: selectedEdges })
+  }, [reactFlow, onDelete, editingNodeId, editingEdgeId])
+
   useKeyboardShortcuts({
     reactFlow,
     onUndo: undo,
     onRedo: redo,
+    onDelete: handleDeleteSelection,
   })
+
+  const projectId = project?.id ?? ""
+  const loadAttemptedRef = useRef(false)
+
+  useEffect(() => {
+    if (!projectId) return
+    if (loadAttemptedRef.current) return
+    loadAttemptedRef.current = true
+
+    if (nodesRef.current.length > 0 || edgesRef.current.length > 0) return
+
+    let cancelled = false
+    void (async () => {
+      try {
+        const res = await fetch(`/api/projects/${projectId}/canvas`)
+        if (!res.ok) return
+        const payload = (await res.json()) as {
+          canvas: { nodes: CanvasNode[]; edges: CanvasEdge[] } | null
+        }
+        if (cancelled || !payload.canvas) return
+        if (nodesRef.current.length > 0 || edgesRef.current.length > 0) return
+
+        const savedEdges = payload.canvas.edges
+        const savedNodes = payload.canvas.nodes
+        if (savedEdges.length > 0) {
+          onEdgesChange(savedEdges.map((item) => ({ type: "add", item })))
+        }
+        if (savedNodes.length > 0) {
+          onNodesChange(savedNodes.map((item) => ({ type: "add", item })))
+        }
+      } catch (err) {
+        console.error("Canvas load failed", err)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [projectId, onNodesChange, onEdgesChange])
+
+  const saveStatus = useCanvasAutosave({
+    projectId,
+    nodes,
+    edges,
+    enabled: !!projectId,
+  })
+
+  useEffect(() => {
+    setCanvasSaveStatus(saveStatus)
+  }, [saveStatus, setCanvasSaveStatus])
+
+  useEffect(() => {
+    return () => {
+      setCanvasSaveStatus("idle")
+    }
+  }, [setCanvasSaveStatus])
 
   const importTemplate = useCallback(
     (template: CanvasTemplate) => {
@@ -335,6 +438,7 @@ function CanvasInner() {
           stopEdgeEditing()
         }}
         connectionMode={ConnectionMode.Loose}
+        deleteKeyCode={null}
         fitView
         proOptions={{ hideAttribution: true }}
       >

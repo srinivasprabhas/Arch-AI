@@ -4,6 +4,7 @@ import { useMemo } from "react"
 import { ViewportPortal } from "@xyflow/react"
 import { useOthers } from "@liveblocks/react/suspense"
 import { useUser } from "@clerk/nextjs"
+import { Loader2 } from "lucide-react"
 
 interface CursorEntry {
   connectionId: number
@@ -11,6 +12,7 @@ interface CursorEntry {
   y: number
   name: string
   color: string
+  thinking: boolean
 }
 
 export function CanvasCursors() {
@@ -30,6 +32,7 @@ export function CanvasCursors() {
         y: cursor.y,
         name: other.info?.name ?? "Collaborator",
         color: other.info?.color ?? "#94A3B8",
+        thinking: other.presence?.thinking === true,
       })
     }
     return list
@@ -74,10 +77,13 @@ function RemoteCursor({ cursor }: { cursor: CursorEntry }) {
         />
       </svg>
       <div
-        className="ml-3 -mt-1 inline-flex max-w-[160px] items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium leading-tight text-white shadow-sm"
+        className="ml-3 -mt-1 inline-flex max-w-[160px] items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium leading-tight text-white shadow-sm"
         style={{ backgroundColor: cursor.color }}
       >
         <span className="truncate">{cursor.name}</span>
+        {cursor.thinking && (
+          <Loader2 className="h-3 w-3 shrink-0 animate-spin" aria-hidden />
+        )}
       </div>
     </div>
   )
