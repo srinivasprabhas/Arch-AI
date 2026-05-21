@@ -1,3 +1,5 @@
+import type { AiChatEvent, AiStatusEvent } from "@/types/tasks"
+
 declare global {
   interface Liveblocks {
     Presence: {
@@ -16,7 +18,7 @@ declare global {
       }
     }
 
-    RoomEvent: {}
+    RoomEvent: AiStatusEvent | AiChatEvent
 
     ThreadMetadata: {}
 

@@ -20,8 +20,9 @@ export function Workspace({ project }: WorkspaceProps) {
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-base">
-      <CanvasRoom roomId={project.id} />
-      <AiSidebar isOpen={isAiSidebarOpen} onClose={toggleAiSidebar} />
+      <CanvasRoom roomId={project.id}>
+        <AiSidebar isOpen={isAiSidebarOpen} onClose={toggleAiSidebar} />
+      </CanvasRoom>
       <ShareDialog />
     </div>
   )

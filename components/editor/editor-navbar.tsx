@@ -1,9 +1,19 @@
 "use client"
 
-import { LayoutTemplate, PanelLeftClose, PanelLeftOpen, Share2, Sparkles } from "lucide-react"
+import {
+  Check,
+  CloudOff,
+  LayoutTemplate,
+  Loader2,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Share2,
+  Sparkles,
+} from "lucide-react"
 import { UserButton } from "@clerk/nextjs"
 import { cn } from "@/lib/utils"
 import { useWorkspace } from "@/hooks/use-workspace"
+import type { CanvasSaveStatus } from "@/hooks/use-canvas-autosave"
 
 interface EditorNavbarProps {
   isSidebarOpen: boolean
@@ -18,6 +28,7 @@ export function EditorNavbar({ isSidebarOpen, onToggleSidebar, className }: Edit
     toggleAiSidebar,
     openShareDialog,
     openStarterTemplates,
+    canvasSaveStatus,
   } = useWorkspace()
 
   return (
@@ -42,10 +53,17 @@ export function EditorNavbar({ isSidebarOpen, onToggleSidebar, className }: Edit
       </div>
 
       {project && (
-        <div className="flex-1 min-w-0 flex items-center">
+        <div className="flex-1 min-w-0 flex items-center gap-2">
           <span className="text-sm font-medium text-copy-primary truncate" title={project.name}>
             {project.name}
           </span>
+          <span
+            className="font-mono text-xs text-copy-muted truncate"
+            title={`Room ID: ${project.id}`}
+          >
+            {project.id}
+          </span>
+          <SaveStatusIndicator status={canvasSaveStatus} />
         </div>
       )}
 
@@ -91,5 +109,37 @@ export function EditorNavbar({ isSidebarOpen, onToggleSidebar, className }: Edit
         <UserButton />
       </div>
     </header>
+  )
+}
+
+function SaveStatusIndicator({ status }: { status: CanvasSaveStatus }) {
+  if (status === "idle") return null
+
+  if (status === "saving") {
+    return (
+      <span className="flex items-center gap-1 rounded-full bg-elevated px-2 py-0.5 text-xs text-copy-muted">
+        <Loader2 className="h-3 w-3 animate-spin" />
+        Saving…
+      </span>
+    )
+  }
+
+  if (status === "saved") {
+    return (
+      <span className="flex items-center gap-1 rounded-full bg-elevated px-2 py-0.5 text-xs text-copy-muted">
+        <Check className="h-3 w-3" />
+        Saved
+      </span>
+    )
+  }
+
+  return (
+    <span
+      className="flex items-center gap-1 rounded-full bg-elevated px-2 py-0.5 text-xs text-error"
+      title="Couldn't save the canvas. We'll try again on the next change."
+    >
+      <CloudOff className="h-3 w-3" />
+      Save failed
+    </span>
   )
 }
