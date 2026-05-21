@@ -19,6 +19,7 @@ export function EditorShell({ children, ownedProjects, sharedProjects }: EditorS
   const [workspaceProject, setWorkspaceProject] = useState<WorkspaceProject | null>(null)
   const [isAiSidebarOpen, setIsAiSidebarOpen] = useState(false)
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
+  const [isStarterTemplatesOpen, setIsStarterTemplatesOpen] = useState(false)
   const dialogState = useProjectDialogs({ ownedProjects, sharedProjects })
 
   const setProject = useCallback((project: WorkspaceProject | null) => {
@@ -31,6 +32,8 @@ export function EditorShell({ children, ownedProjects, sharedProjects }: EditorS
 
   const openShareDialog = useCallback(() => setIsShareDialogOpen(true), [])
   const closeShareDialog = useCallback(() => setIsShareDialogOpen(false), [])
+  const openStarterTemplates = useCallback(() => setIsStarterTemplatesOpen(true), [])
+  const closeStarterTemplates = useCallback(() => setIsStarterTemplatesOpen(false), [])
 
   return (
     <ProjectDialogsContext.Provider value={dialogState}>
@@ -43,6 +46,10 @@ export function EditorShell({ children, ownedProjects, sharedProjects }: EditorS
           isShareDialogOpen,
           openShareDialog,
           closeShareDialog,
+          isProjectSidebarOpen: sidebarOpen,
+          isStarterTemplatesOpen,
+          openStarterTemplates,
+          closeStarterTemplates,
         }}
       >
         <div className="flex flex-col h-full bg-base">

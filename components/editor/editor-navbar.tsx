@@ -1,6 +1,6 @@
 "use client"
 
-import { PanelLeftClose, PanelLeftOpen, Share2, Sparkles } from "lucide-react"
+import { LayoutTemplate, PanelLeftClose, PanelLeftOpen, Share2, Sparkles } from "lucide-react"
 import { UserButton } from "@clerk/nextjs"
 import { cn } from "@/lib/utils"
 import { useWorkspace } from "@/hooks/use-workspace"
@@ -12,7 +12,13 @@ interface EditorNavbarProps {
 }
 
 export function EditorNavbar({ isSidebarOpen, onToggleSidebar, className }: EditorNavbarProps) {
-  const { project, isAiSidebarOpen, toggleAiSidebar, openShareDialog } = useWorkspace()
+  const {
+    project,
+    isAiSidebarOpen,
+    toggleAiSidebar,
+    openShareDialog,
+    openStarterTemplates,
+  } = useWorkspace()
 
   return (
     <header
@@ -48,6 +54,15 @@ export function EditorNavbar({ isSidebarOpen, onToggleSidebar, className }: Edit
       <div className="flex items-center gap-1 shrink-0">
         {project && (
           <>
+            <button
+              type="button"
+              onClick={openStarterTemplates}
+              aria-label="Open starter templates"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-sm text-copy-secondary hover:text-copy-primary hover:bg-elevated transition-colors"
+            >
+              <LayoutTemplate className="h-4 w-4" />
+              <span className="hidden sm:inline">Templates</span>
+            </button>
             <button
               type="button"
               onClick={openShareDialog}

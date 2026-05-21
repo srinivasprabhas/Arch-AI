@@ -15,6 +15,10 @@ export interface WorkspaceContextValue {
   isShareDialogOpen: boolean
   openShareDialog: () => void
   closeShareDialog: () => void
+  isProjectSidebarOpen: boolean
+  isStarterTemplatesOpen: boolean
+  openStarterTemplates: () => void
+  closeStarterTemplates: () => void
 }
 
 export const WorkspaceContext = createContext<WorkspaceContextValue | null>(null)
