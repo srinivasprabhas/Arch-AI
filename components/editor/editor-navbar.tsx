@@ -12,7 +12,7 @@ interface EditorNavbarProps {
 }
 
 export function EditorNavbar({ isSidebarOpen, onToggleSidebar, className }: EditorNavbarProps) {
-  const { project, isAiSidebarOpen, toggleAiSidebar } = useWorkspace()
+  const { project, isAiSidebarOpen, toggleAiSidebar, openShareDialog } = useWorkspace()
 
   return (
     <header
@@ -50,6 +50,7 @@ export function EditorNavbar({ isSidebarOpen, onToggleSidebar, className }: Edit
           <>
             <button
               type="button"
+              onClick={openShareDialog}
               aria-label="Share project"
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-sm text-copy-secondary hover:text-copy-primary hover:bg-elevated transition-colors"
             >

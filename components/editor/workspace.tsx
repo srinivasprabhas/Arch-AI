@@ -4,6 +4,7 @@ import { useEffect } from "react"
 import { Sparkles, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useWorkspace, type WorkspaceProject } from "@/hooks/use-workspace"
+import { ShareDialog } from "@/components/editor/share-dialog"
 
 interface WorkspaceProps {
   project: WorkspaceProject
@@ -21,6 +22,7 @@ export function Workspace({ project }: WorkspaceProps) {
     <div className="relative h-full w-full overflow-hidden bg-base">
       <CanvasPlaceholder />
       <AiSidebar isOpen={isAiSidebarOpen} onClose={toggleAiSidebar} />
+      <ShareDialog />
     </div>
   )
 }
