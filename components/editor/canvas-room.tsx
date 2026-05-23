@@ -1,6 +1,7 @@
 "use client"
 
 import { Component, type ReactNode } from "react"
+import { Loader2 } from "lucide-react"
 import {
   ClientSideSuspense,
   LiveblocksProvider,
@@ -35,7 +36,10 @@ export function CanvasRoom({ roomId, children }: CanvasRoomProps) {
 function CanvasFallback({ message }: { message: string }) {
   return (
     <div className="flex h-full w-full items-center justify-center">
-      <p className="text-xs text-copy-faint">{message}</p>
+      <div className="flex items-center gap-3 text-[#F3F4F6]">
+        <Loader2 className="h-5 w-5 animate-spin text-[#8B5CF6]" />
+        <p className="text-lg font-medium">{message}</p>
+      </div>
     </div>
   )
 }

@@ -20,3 +20,6 @@ Read the following files in order before implementing or making any architectura
 Update `context/progress-tracker.md` after each meaningful implementation change.
 
 If implementation changes the architecture, scope, or standards documented in the context files, update the relevant file before continuing.
+
+
+- never use or create fore-dynamic functions unless specified 

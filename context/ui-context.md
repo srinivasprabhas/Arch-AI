@@ -95,10 +95,65 @@ shadcn/ui on top of Tailwind. No custom design system. Components live in `compo
 
 ## Layout Patterns
 
-- Editor workspace: full-viewport layout — floating sidebar overlay on the left, center canvas, slide-over AI sidebar on the right.
-- Sidebars: floating overlay with dark semi-transparent background and subtle border.
+- Editor workspace: canvas-first, full-bleed canvas. No fixed top navbar — all chrome is layered as **floating overlays** above the canvas. Project sidebar is a floating slide-in panel on the left; AI sidebar slides in from the right; the editor toolbar floats at the top.
+- Sidebars: floating overlay with dark semi-transparent background, subtle border, and `backdrop-blur`. Never shift canvas layout.
 - Modals and dialogs: centered overlay, `rounded-3xl`, dark background with backdrop blur.
-- Navbar: top bar with dark background and bottom border.
+
+## Floating Editor Toolbar
+
+The editor toolbar is **not** a full-width bar. It floats at `top-4` over the canvas, broken into multiple grouped pills with gaps between them. Layout: `[left controls] [right controls]` justified to the edges, never edge-to-edge.
+
+### Floating Surface Design Tokens
+
+These tokens are used **exclusively** for the floating toolbar groups, dropdown menus, and any active floating accent. They are scoped to the floating-chrome layer and do not replace the canvas/UI tokens above.
+
+| Purpose          | Color           | Hex                         |
+| ---------------- | --------------- | --------------------------- |
+| Primary          | Electric Purple | `#8B5CF6`                   |
+| Primary Hover    | Soft Purple     | `#A78BFA`                   |
+| Primary Pressed  | Deep Purple     | `#7C3AED`                   |
+| Background       | Rich Dark       | `#0F0F12`                   |
+| Surface          | Card Dark       | `#18181C`                   |
+| Elevated Surface | Layer Dark      | `#23232A`                   |
+| Border           | Subtle Border   | `#2E2E36`                   |
+| Text Primary     | Soft White      | `#F3F4F6`                   |
+| Text Secondary   | Gray            | `#9CA3AF`                   |
+| Success          | Emerald         | `#10B981`                   |
+| Error            | Rose Red        | `#EF4444`                   |
+| Active Glow      | Purple Glow     | `0 0 24px rgba(139,92,246,0.35)` |
+
+Avoid: giant blurs, neon, layered shadows. The glow is subtle and only appears on **active** floating elements (e.g. the AI sidebar toggle while open).
+
+### Group Vocabulary
+
+- Floating group container: `rounded-xl border border-[#2E2E36] bg-[#18181C]/85 backdrop-blur-md shadow-[0_8px_24px_rgba(0,0,0,0.4)]`
+- Dropdown menus: `rounded-2xl border border-[#2E2E36] bg-[#18181C]/95 backdrop-blur-md`
+- Icon button (inside group): `h-8 w-8 rounded-xl text-[#9CA3AF] hover:text-[#F3F4F6] hover:bg-[#23232A]`
+- Transitions: `transition-colors duration-150 ease-out`. No large scale animations — only opacity + translate.
+
+### Toolbar Sections
+
+**Left:**
+1. Sidebar toggle — Lucide `PanelRightClose` / `PanelRightOpen`.
+2. Editor menu — Lucide `Menu` opens a shadcn `DropdownMenu` with items:
+   - Rename Scene (`Pencil`) — focuses the inline project title for editing.
+   - Copy Room ID (`Copy`) — writes `project.id` to the clipboard.
+   - Export Image (`ImageDown`) — placeholder (not yet wired to canvas export).
+   - Share (`Share2`) — opens the existing share dialog.
+3. Project title — inline-editable text. Default: `text-[#F3F4F6]`. Hover: transitions to `#8B5CF6` with a faded underline. Active editing: input is `border-none outline-none bg-transparent underline`, full text selected on click, commits on Enter or blur via `PATCH /api/projects/:id`, reverts on Escape.
+4. Save status — icon-only indicator (no text). `Saved` → muted `Check`, `Saving` → muted `Loader2` spinner (tooltip "Saving"), error → `AlertTriangle` in `#EF4444` (tooltip "Sync failed").
+
+**Right:** `avatars → templates → share → AI → profile`, with tight spacing.
+
+### Avatar Group
+
+Collaborator avatars live inside the floating toolbar (not on the canvas itself). Built on the shadcn `Avatar` primitives with project-local `AvatarGroup` / `AvatarGroupCount` wrappers (`components/ui/avatar.tsx`).
+
+Rules:
+- Inactive avatars rendered with `grayscale`; restored to color on group hover.
+- Overlapping with `-space-x-2` and a `ring-2 ring-[#18181C]` outline so they read on the dark surface.
+- Up to 4 avatars visible; the remainder collapses into a circular `AvatarGroupCount` chip on the elevated surface (e.g. `+3`).
+- The current user is **not** rendered in this group — their identity is the Clerk `<UserButton />` on the far right of the toolbar.
 
 ## Icons
 

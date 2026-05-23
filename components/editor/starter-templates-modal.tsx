@@ -4,10 +4,8 @@ import { useMemo } from "react"
 import { EditorDialog } from "@/components/editor/editor-dialog"
 import { Button } from "@/components/ui/button"
 import { getNodeTextColor, type CanvasNodeShape } from "@/types/canvas"
-import {
-  CANVAS_TEMPLATES,
-  type CanvasTemplate,
-} from "@/components/editor/starter-templates"
+import { STARTER_TEMPLATES } from "@/lib/templates"
+import type { StarterTemplate } from "@/types/template"
 
 const PREVIEW_WIDTH = 260
 const PREVIEW_HEIGHT = 140
@@ -16,7 +14,7 @@ const PREVIEW_PADDING = 8
 interface StarterTemplatesModalProps {
   open: boolean
   onClose: () => void
-  onImport: (template: CanvasTemplate) => void
+  onImport: (template: StarterTemplate) => void
 }
 
 export function StarterTemplatesModal({
@@ -30,11 +28,11 @@ export function StarterTemplatesModal({
       onOpenChange={(v) => !v && onClose()}
       title="Start from a template"
       description="Pick a pre-built diagram to replace your current canvas."
-      className="max-w-5xl"
+      className="max-w-5xl data-[state=open]:duration-0! data-[state=closed]:duration-0! data-[state=open]:animate-none! data-[state=closed]:animate-none!"
     >
       <div className="max-h-[65vh] overflow-y-auto pr-1">
         <div className="grid grid-cols-1 gap-4 py-2 sm:grid-cols-2 lg:grid-cols-3">
-          {CANVAS_TEMPLATES.map((template) => (
+          {STARTER_TEMPLATES.map((template) => (
             <TemplateCard
               key={template.id}
               template={template}
@@ -51,7 +49,7 @@ export function StarterTemplatesModal({
 }
 
 interface TemplateCardProps {
-  template: CanvasTemplate
+  template: StarterTemplate
   onImport: () => void
 }
 
@@ -66,7 +64,7 @@ function TemplateCard({ template, onImport }: TemplateCardProps) {
       <Button
         type="button"
         onClick={onImport}
-        className="bg-brand text-base-foreground hover:bg-brand/90"
+        className="bg-[#8B5CF6] text-white hover:bg-[#A78BFA] active:bg-[#7C3AED]"
       >
         Import
       </Button>
@@ -85,7 +83,7 @@ interface PreviewNode {
   stroke: string
 }
 
-function TemplatePreview({ template }: { template: CanvasTemplate }) {
+function TemplatePreview({ template }: { template: StarterTemplate }) {
   const view = useMemo(() => buildPreviewView(template), [template])
 
   return (
@@ -203,7 +201,7 @@ interface PreviewView {
   nodeMap: Map<string, PreviewNode>
 }
 
-function buildPreviewView(template: CanvasTemplate): PreviewView {
+function buildPreviewView(template: StarterTemplate): PreviewView {
   if (template.nodes.length === 0) {
     return { nodes: [], nodeMap: new Map() }
   }

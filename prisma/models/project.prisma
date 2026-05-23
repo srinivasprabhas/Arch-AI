@@ -3,15 +3,21 @@ enum ProjectStatus {
   ARCHIVED
 }
 
+enum ProjectRole {
+  EDITOR
+  VIEWER
+}
+
 model Project {
-  id             String        @id @default(cuid())
-  ownerId        String
-  name           String
-  description    String?
-  status         ProjectStatus @default(DRAFT)
-  canvasJsonPath String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id                String        @id @default(cuid())
+  ownerId           String
+  name              String
+  description       String?
+  status            ProjectStatus @default(DRAFT)
+  canvasJsonPath    String?
+  publicViewEnabled Boolean       @default(false)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
   collaborators ProjectCollaborator[]
   specs         ProjectSpec[]
@@ -21,10 +27,11 @@ model Project {
 }
 
 model ProjectCollaborator {
-  id        String   @id @default(cuid())
+  id        String      @id @default(cuid())
   projectId String
   email     String
-  createdAt DateTime @default(now())
+  role      ProjectRole @default(EDITOR)
+  createdAt DateTime    @default(now())
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 

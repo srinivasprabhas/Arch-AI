@@ -41,14 +41,18 @@ import { CanvasCursors } from "@/components/editor/canvas-cursors"
 import { CanvasEdgeRenderer } from "@/components/editor/canvas-edge"
 import { CanvasMiniMapNode } from "@/components/editor/canvas-mini-map-node"
 import { CanvasNodeRenderer } from "@/components/editor/canvas-node"
-import { CanvasPresenceAvatars } from "@/components/editor/canvas-presence-avatars"
+import {
+  CanvasToolBar,
+  type CanvasTool,
+} from "@/components/editor/canvas-tool-bar"
+import { MiniMapToggle } from "@/components/editor/mini-map-toggle"
 import {
   NodeEditingContext,
   type NodeEditingContextValue,
 } from "@/components/editor/node-editing-context"
-import { ShapePanel } from "@/components/editor/shape-panel"
 import { StarterTemplatesModal } from "@/components/editor/starter-templates-modal"
-import type { CanvasTemplate } from "@/components/editor/starter-templates"
+import { cloneTemplate } from "@/lib/templates"
+import type { StarterTemplate } from "@/types/template"
 import { useCanvasAutosave } from "@/hooks/use-canvas-autosave"
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
 import { useWorkspace } from "@/hooks/use-workspace"
@@ -117,9 +121,12 @@ function CanvasInner() {
     closeStarterTemplates,
     setCanvasSaveStatus,
   } = useWorkspace()
+  const isReadOnly = project?.role === "viewer"
   const nodeCounterRef = useRef(0)
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null)
   const [editingEdgeId, setEditingEdgeId] = useState<string | null>(null)
+  const [tool, setTool] = useState<CanvasTool>("select")
+  const [isMiniMapVisible, setIsMiniMapVisible] = useState(true)
 
   const startEditing = useCallback((nodeId: string) => {
     setEditingNodeId(nodeId)
@@ -269,35 +276,75 @@ function CanvasInner() {
   })
 
   const projectId = project?.id ?? ""
-  const loadAttemptedRef = useRef(false)
 
+  // Restore the canvas blob into Liveblocks Storage on first mount for this
+  // project. The hard correctness rule here is: dispatch happens at most
+  // once per (project, component-instance). The two real failure modes we
+  // guard against are:
+  //
+  //   1. React 18 Strict Mode double-mount (dev). The first effect run is
+  //      cancelled by its own cleanup before its async work commits; the
+  //      second run must still be able to dispatch.
+  //   2. Concurrent effect re-runs from unstable callback refs in the deps
+  //      array. Same shape as (1) — earlier runs must cancel cleanly and
+  //      the last surviving run must still dispatch.
+  //
+  // Strategy: don't pre-set a "load attempted" flag. The only lock is the
+  // Storage emptiness check immediately before each dispatch — any prior
+  // run that did dispatch will have populated Storage, so subsequent runs
+  // bail naturally. Cancelled runs never reach the dispatch, so they don't
+  // need a flag of their own.
   useEffect(() => {
     if (!projectId) return
-    if (loadAttemptedRef.current) return
-    loadAttemptedRef.current = true
-
+    // Cheap fast-path skip; the post-await check is the real correctness lock.
     if (nodesRef.current.length > 0 || edgesRef.current.length > 0) return
 
     let cancelled = false
     void (async () => {
       try {
         const res = await fetch(`/api/projects/${projectId}/canvas`)
+        if (cancelled) return
         if (!res.ok) return
         const payload = (await res.json()) as {
           canvas: { nodes: CanvasNode[]; edges: CanvasEdge[] } | null
         }
         if (cancelled || !payload.canvas) return
+
+        // Recheck Storage post-await: a concurrent effect instance (Strict
+        // Mode or dep-driven re-run) may have already populated it. The
+        // check is the correctness lock against double-dispatch.
         if (nodesRef.current.length > 0 || edgesRef.current.length > 0) return
 
-        const savedEdges = payload.canvas.edges
         const savedNodes = payload.canvas.nodes
-        if (savedEdges.length > 0) {
-          onEdgesChange(savedEdges.map((item) => ({ type: "add", item })))
-        }
+        const savedEdges = payload.canvas.edges
+        // Nodes must land in Storage before edges, otherwise React Flow
+        // briefly filters edges whose endpoints don't resolve yet.
+        if (cancelled) return
         if (savedNodes.length > 0) {
           onNodesChange(savedNodes.map((item) => ({ type: "add", item })))
         }
+        if (cancelled) return
+        if (savedEdges.length > 0) {
+          onEdgesChange(savedEdges.map((item) => ({ type: "add", item })))
+        }
+
+        // Re-center on the restored content. The rAF callback also rechecks
+        // cancellation because the component may have unmounted between the
+        // dispatch above and the next frame — calling fitView on a torn-down
+        // React Flow context throws "state update on unmounted component".
+        if (!cancelled && (savedNodes.length > 0 || savedEdges.length > 0)) {
+          requestAnimationFrame(() => {
+            if (cancelled) return
+            try {
+              fitView({ duration: 400, padding: 0.2 })
+            } catch (err) {
+              // React Flow can throw mid-unmount; not actionable.
+              console.warn("fitView skipped", err)
+            }
+          })
+        }
       } catch (err) {
+        if (cancelled) return
         console.error("Canvas load failed", err)
       }
     })()
@@ -305,13 +352,18 @@ function CanvasInner() {
     return () => {
       cancelled = true
     }
-  }, [projectId, onNodesChange, onEdgesChange])
+    // Deps intentionally limited to `projectId`. The Storage check
+    // dedupes across any extra runs that unstable callback refs would
+    // otherwise trigger, so adding them here only thrashes network without
+    // changing the dispatch outcome.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId])
 
   const saveStatus = useCanvasAutosave({
     projectId,
     nodes,
     edges,
-    enabled: !!projectId,
+    enabled: !!projectId && !isReadOnly,
   })
 
   useEffect(() => {
@@ -325,20 +377,15 @@ function CanvasInner() {
   }, [setCanvasSaveStatus])
 
   const importTemplate = useCallback(
-    (template: CanvasTemplate) => {
+    (template: StarterTemplate) => {
       const currentNodes = nodesRef.current
       const currentEdges = edgesRef.current
 
-      const newNodes: CanvasNode[] = template.nodes.map((n) => ({
-        ...n,
-        position: { ...n.position },
-        style: n.style ? { ...n.style } : undefined,
-        data: { ...n.data },
-      }))
-      const newEdges: CanvasEdge[] = template.edges.map((e) => ({
-        ...e,
-        data: e.data ? { ...e.data } : {},
-      }))
+      // Always clone through the shared utility so that repeated imports of
+      // the same template into the same collaborative room never collide on
+      // node ids (Liveblocks Storage keys + React Flow node ids must stay
+      // unique). `cloneTemplate` also remaps edge endpoints in the same pass.
+      const { nodes: newNodes, edges: newEdges } = cloneTemplate(template)
 
       onEdgesChange([
         ...currentEdges.map((e) => ({ type: "remove" as const, id: e.id })),
@@ -417,20 +464,44 @@ function CanvasInner() {
     [screenToFlowPosition, onNodesChange],
   )
 
+  const handleEraserNodeClick = useCallback(
+    (event: ReactMouseEvent, node: CanvasNode) => {
+      if (tool !== "eraser") return
+      event.stopPropagation()
+      onDelete({ nodes: [node], edges: [] })
+    },
+    [tool, onDelete],
+  )
+
+  const handleEraserEdgeClick = useCallback(
+    (event: ReactMouseEvent, edge: CanvasEdge) => {
+      if (tool !== "eraser") return
+      event.stopPropagation()
+      onDelete({ nodes: [], edges: [edge] })
+    },
+    [tool, onDelete],
+  )
+
+  const miniMapRightOffset =
+    16 + (isAiSidebarOpen ? AI_SIDEBAR_TOTAL_OFFSET : 0)
+
   return (
     <NodeEditingContext.Provider value={editingValue}>
       <ReactFlow
+        className={isReadOnly ? "tool-hand" : `tool-${tool}`}
         nodes={nodes}
         edges={edges}
         nodeTypes={NODE_TYPES}
         edgeTypes={EDGE_TYPES}
         defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onDelete={onDelete}
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
+        onNodesChange={isReadOnly ? undefined : onNodesChange}
+        onEdgesChange={isReadOnly ? undefined : onEdgesChange}
+        onConnect={isReadOnly ? undefined : onConnect}
+        onDelete={isReadOnly ? undefined : onDelete}
+        onNodeClick={isReadOnly ? undefined : handleEraserNodeClick}
+        onEdgeClick={isReadOnly ? undefined : handleEraserEdgeClick}
+        onDragOver={isReadOnly ? undefined : handleDragOver}
+        onDrop={isReadOnly ? undefined : handleDrop}
         onMouseMove={handlePointerMove}
         onMouseLeave={handlePointerLeave}
         onPaneClick={() => {
@@ -439,29 +510,42 @@ function CanvasInner() {
         }}
         connectionMode={ConnectionMode.Loose}
         deleteKeyCode={null}
+        panOnDrag={isReadOnly ? true : tool === "hand"}
+        selectionOnDrag={isReadOnly ? false : tool === "select"}
+        nodesDraggable={!isReadOnly && tool !== "hand"}
+        nodesConnectable={!isReadOnly}
+        elementsSelectable={true}
+        edgesReconnectable={!isReadOnly}
         fitView
         proOptions={{ hideAttribution: true }}
       >
         <CanvasCursors />
         <Background variant={BackgroundVariant.Dots} />
-        <MiniMap
-          bgColor="var(--bg-surface)"
-          maskColor="rgba(8, 8, 9, 0.6)"
-          nodeColor={(node) => (node as CanvasNode).data.color}
-          nodeStrokeColor="var(--border-subtle)"
-          nodeStrokeWidth={2}
-          nodeComponent={CanvasMiniMapNode}
-          pannable
-          zoomable
-          style={{
-            width: 140,
-            height: 96,
-            marginRight: 16 + (isAiSidebarOpen ? AI_SIDEBAR_TOTAL_OFFSET : 0),
-            transition: "margin-right 300ms ease-in-out",
-            border: "1px solid var(--border-default)",
-            borderRadius: "0.75rem",
-            overflow: "hidden",
-          }}
+        {isMiniMapVisible ? (
+          <MiniMap
+            bgColor="var(--bg-surface)"
+            maskColor="rgba(8, 8, 9, 0.6)"
+            nodeColor={(node) => (node as CanvasNode).data.color}
+            nodeStrokeColor="var(--border-subtle)"
+            nodeStrokeWidth={2}
+            nodeComponent={CanvasMiniMapNode}
+            pannable
+            zoomable
+            style={{
+              width: 160,
+              height: 110,
+              marginRight: miniMapRightOffset,
+              transition: "margin-right 300ms ease-in-out",
+              border: "1px solid var(--border-default)",
+              borderRadius: "0.75rem",
+              overflow: "hidden",
+            }}
+          />
+        ) : null}
+        <MiniMapToggle
+          visible={isMiniMapVisible}
+          onToggle={() => setIsMiniMapVisible((v) => !v)}
+          rightOffset={miniMapRightOffset}
         />
         <CanvasControlBar
           onZoomIn={handleZoomIn}
@@ -473,16 +557,15 @@ function CanvasInner() {
           canRedo={canRedo}
           leftOffset={isProjectSidebarOpen ? PROJECT_SIDEBAR_WIDTH : 0}
         />
-        <ShapePanel />
-        <CanvasPresenceAvatars
-          rightOffset={isAiSidebarOpen ? AI_SIDEBAR_TOTAL_OFFSET : 0}
-        />
+        {!isReadOnly && <CanvasToolBar tool={tool} onToolChange={setTool} />}
       </ReactFlow>
-      <StarterTemplatesModal
-        open={isStarterTemplatesOpen}
-        onClose={closeStarterTemplates}
-        onImport={importTemplate}
-      />
+      {!isReadOnly && (
+        <StarterTemplatesModal
+          open={isStarterTemplatesOpen}
+          onClose={closeStarterTemplates}
+          onImport={importTemplate}
+        />
+      )}
     </NodeEditingContext.Provider>
   )
 }

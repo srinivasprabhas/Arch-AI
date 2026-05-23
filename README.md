@@ -1,86 +1,92 @@
-## 📋 <a name="table">Table of 
-## <a name="introduction">✨ Introduction</a>
+# Arch-AI
 
-Arch-AI is an agentic planning application built for software teams. A user submits a natural-language prompt (e.g., "Design a scalable e-commerce backend") and a Google Gemini-powered AI agent autonomously places nodes and edges onto a shared React Flow canvas in real-time. Human teammates can watch the AI build the diagram live, then jump in to collaboratively refine it. Once the team is satisfied, a second AI background task converts the visual graph into a comprehensive, multi-page Markdown technical specification that can be downloaded directly from the app.
+A real-time collaborative **system-design canvas** for developers and designers who think in boxes and arrows.
 
-## <a name="tech-stack">⚙️ Tech Stack</a>
+Drop primitives onto a shared whiteboard, connect them with edges, name things, share the link, debate the architecture. Everyone you invite sees the same canvas in real time — cursors, edits, selections, the whole thing.
 
-- **[Next.js](https://nextjs.org/)** is a production-ready React framework that offers server-side rendering, static site generation, and powerful routing features. It streamlines the development of full-stack web applications by providing a comprehensive ecosystem for performance optimization, data fetching, and API development.
+It's "whiteboard with your team" without the whiteboard — built for engineers and designers who plan microservices, event-driven systems, CI/CD pipelines, data flows, and the messy middle of *let's think this through before we ship it*.
 
-- **[React](https://react.dev/)** is a popular JavaScript library for building declarative and component-based user interfaces. It excels at creating reusable UI components and efficient state management, making it the standard choice for building dynamic and interactive single-page applications.
+## ✨ What it is
 
-- **[TypeScript](https://www.typescriptlang.org/)** is a strongly typed superset of JavaScript that adds static type definitions to your code. It significantly improves developer productivity and code reliability by catching errors during development, enhancing IDE support, and facilitating maintainability in large-scale projects.
+| | |
+|---|---|
+| **Purpose** | A canvas-first tool for designing software systems collaboratively |
+| **Audience** | Backend engineers, infra engineers, full-stack devs, system designers, product designers planning flows |
+| **Mental model** | Excalidraw-style floating toolbar + Figma-style multiplayer + a small AI assist layer |
+| **Built on** | Next.js 16, React 19, Liveblocks, Clerk, Prisma + Postgres, Vercel Blob, Trigger.dev, Tailwind, shadcn/ui |
 
-- **[Liveblocks](https://jsm.dev/ghost-liveblocks)** is a real-time collaboration infrastructure that enables developers to build multiplayer experiences. It provides robust APIs for presence, shared state, and text synchronization, allowing you to easily add collaborative features like cursors, whiteboard tools, and shared document editing to your apps.
+## 🔋 What's built
 
-- **[Clerk](https://jsm.dev/ghost-clerk)** is a specialized authentication and user management platform for React and Next.js. It offers drop-in pre-built components for sign-in, sign-up, and profile management, while handling complex requirements like session management, multi-factor authentication, and organization hierarchies out of the box.
+### Canvas
+- Six primitive shapes — **rectangle** (component), **pill** (service), **cylinder** (database), **hexagon** (external system), **diamond** (decision/gate), **circle** (event) — draggable from a floating shapes popover.
+- Inline editable node labels (double-click), inline editable edge labels (double-click), eight color swatches via a hover toolbar, resize handles, smooth-step edge routing with arrowheads.
+- Four-tool selector at the bottom: **Select** (box-drag selection) · **Hand** (panning) · **Shapes** (popover) · **Eraser** (click-to-delete).
+- Mini-map with hide/show toggle, pan-zoom controls, undo / redo, fit-to-view, keyboard shortcuts.
+- Per-tool cursor (default / grab / crosshair).
 
-- **[Trigger.dev](https://jsm.dev/ghost-triggerdev)** is an open-source platform for orchestrating long-running background jobs and workflows. It allows developers to define jobs directly in their code that respond to webhooks, schedules, or events, handling retries, delays, and state management without the need for complex infrastructure.
+### Real-time multiplayer
+- Shared `nodes` / `edges` storage backed by **Liveblocks** — every mutation broadcasts to all connected clients.
+- Live cursors with colored name pills, presence avatar group in the floating navbar (click an avatar → small popover with name + status).
+- Collaborative chat feed inside the AI sidebar — short-form messages broadcast over Liveblocks events.
 
-- **[Prisma ORM](https://www.prisma.io/)** is a next-generation ORM for Node.js and TypeScript that simplifies database interactions. By providing a type-safe client generated from your schema, it makes querying your database intuitive, readable, and highly efficient, effectively eliminating common SQL-related runtime errors.
+### Dashboard & projects
+- Sign in with **Clerk** → land on `/dashboard`.
+- Canvas-card grid showing live SVG previews of every project; hover menu per card for **Rename Project**, **Copy Room ID**, **Export Image**, **Share**, **Delete**.
+- Side nav: `/dashboard` · `/projects` (yours) · `/shared` (anything someone shared with you, including public view-only joins).
+- Starter templates strip — one-click clone of *Microservices Architecture*, *CI/CD Pipeline*, *Event-Driven System* (deep-cloned with fresh ids so your edits stay on your copy).
+- Floating account row at the bottom of the sidebar.
 
-- **[PostgreSQL](https://www.postgresql.org/)** is an advanced, open-source object-relational database system widely recognized for its reliability, extensibility, and standard compliance. It provides the persistent storage layer for your application, supporting complex queries, transactional integrity, and large-scale data handling.
+### Persistence
+- Canvas autosaves to **Vercel Blob** (debounced ~1s after the last edit). Reload restores the canvas exactly.
+- Project metadata (name, owner, collaborators, role, public-view flag) lives in **PostgreSQL** via **Prisma**.
+- Per-project blob path is deterministic (`canvas/{projectId}.json`) — the URL doesn't churn between saves.
 
-- **[Tailwind CSS](https://tailwindcss.com/)** is a utility-first CSS framework that enables rapid custom UI development. By utilizing low-level utility classes directly in your markup, it removes the need to switch between CSS and HTML files, allowing for highly consistent and responsive design systems.
+### Sharing & access control
+- **Email invite** → collaborator joins as an `EDITOR` (can edit the canvas, sees the project under `/shared`).
+- **Public view-only link** (toggle in the share dialog). Anyone signed in who opens the URL is auto-added as a `VIEWER`. Server-side:
+  - Liveblocks auth issues a **read-only** token (`session.READ_ACCESS`) so viewers can observe presence + storage but cannot mutate.
+  - The editor hides the tool bar, AI sidebar, share dialog, and inline title edit; a "View only" banner pins to the top.
+- Public sharing is a one-toggle UX — the toggle off / on cleanly maps to the `Project.publicViewEnabled` boolean.
 
-- **[shadcn/ui](https://ui.shadcn.com/)** is a collection of beautifully designed, accessible, and re-usable UI components that you can copy and paste directly into your projects. Built on top of Radix UI and Tailwind CSS, it grants you full control over your component code, avoiding the bloat of traditional component libraries.
+### Editor UI
+- Canvas-first **floating toolbar** (Excalidraw-style) — no edge-to-edge nav bar. Floating pills for sidebar toggle, project menu, inline project title, save-status icon, collaborator avatars, templates, share, AI.
+- Electric Purple (`#8B5CF6`) accents, subtle backdrop blur on every floating surface, 150ms ease-out transitions, no neon, no heavy shadows.
+- Export Image — renders the canvas to a 1280×720 PNG via SVG serialization → `<canvas>.toDataURL` (Copy to clipboard or Download as `.png`).
 
-- **[CodeRabbit](https://jsm.dev/ghost-coderabbit)** is an AI-powered code review assistant that automates pull request analysis. It provides line-by-line feedback, suggests code improvements, summarizes changes, and helps maintain high code quality by integrating seamlessly into your git-based development workflow.
+## ⚠️ What's NOT polished — the AI parts
 
-## <a name="features">🔋 Features</a>
+**Be honest: the AI integration is rough.** It's wired end-to-end so you can see the shape of where it's going, but it is not the headline feature today:
 
-👉 **AI Architecture Agent**: Submit a plain-English prompt; Gemini draws nodes and edges onto the live canvas in real-time via Trigger.dev background tasks and the Liveblocks Node.js SDK.
+- **AI architect sidebar** — accepts a prompt, dispatches a [Trigger.dev](https://trigger.dev) background task, calls Gemini 2.5 Flash, and writes nodes/edges back to the canvas via the Liveblocks Node SDK. The prompts are basic, the layout heuristic is naive (not graph-aware), the agent doesn't ask clarifying questions or critique an existing diagram.
+- **Spec generation** — turns the current graph into a Markdown technical spec and stores it as a downloadable artifact. The output is templated, not deeply reasoned, and won't replace a real design doc.
+- There's **no AI-driven canvas analysis** (no "what's wrong with this architecture", no suggestions, no validation against patterns), no AI-driven layout fixing, no chat history persistence, no model selector.
 
-👉 **Multiplayer Canvas**: Full real-time collaboration powered by Liveblocks: synchronized node/edge state, live cursor positions, and presence avatars for every connected user.
+**Treat the AI features as a demo layer** on top of a solid collaborative canvas — not as a polished autonomous designer. The canvas, multiplayer, persistence, sharing, dashboard, and role-based access are the parts you can rely on right now.
 
-👉 **Custom Canvas Nodes**: Double-click to edit node labels inline; select to resize with NodeResizer; choose from 12 colour swatches via a floating NodeToolbar — all synced across clients instantly.
+## ⚙️ Tech Stack
 
-👉 **AI Spec Generation**: One click converts the current graph into a detailed Markdown technical specification using a second Gemini-powered Trigger.dev task.
+- **[Next.js 16](https://nextjs.org/)** — App Router, server-rendered pages, Turbopack dev.
+- **[React 19](https://react.dev/)** + **[TypeScript](https://www.typescriptlang.org/)** strict mode.
+- **[React Flow](https://reactflow.dev/)** (`@xyflow/react`) — the canvas renderer.
+- **[Liveblocks](https://liveblocks.io/)** — multiplayer storage, presence, broadcast events; `@liveblocks/react-flow` integration syncs React Flow state to a Liveblocks room.
+- **[Clerk](https://clerk.com/)** — auth + user management.
+- **[Prisma 7](https://www.prisma.io/)** + **[PostgreSQL](https://www.postgresql.org/)** — typed ORM + persistent metadata store.
+- **[Vercel Blob](https://vercel.com/storage/blob)** — canvas snapshots + generated spec artifacts.
+- **[Trigger.dev](https://trigger.dev/)** — background tasks for AI (design agent + spec generation).
+- **[Google AI SDK](https://ai.google.dev/)** (`@ai-sdk/google`) — Gemini 2.5 Flash for both AI tasks.
+- **[Tailwind CSS](https://tailwindcss.com/)** + **[shadcn/ui](https://ui.shadcn.com/)** — utility CSS + accessible primitives (Dialog, Popover, Switch, Avatar, ScrollArea, Tabs, DropdownMenu, etc.).
 
-👉 **Multi-Spec Storage**: Each project stores multiple specs. Metadata lives in PostgreSQL (Prisma); content is stored as Markdown files on disk (`data/specs/{projectId}/{specId}.md`).
+## 🤸 Quick Start
 
-👉 **Downloadable Specs**: Every generated spec is available via a dedicated download API route.
-
-👉 **Clerk Authentication**: Global route protection via `clerkMiddleware`; Liveblocks tokens are only issued to authenticated users.
-
-👉 **Auto-Save Canvas**: The canvas state is debounced-saved to `data/canvas/{projectId}.json` every 3 seconds of inactivity.
-
-👉 **Project Management**: Create projects from a slide-in sidebar; project slugs auto-generate room IDs; the active room is highlighted.
-
-👉 **Share**: One-click URL copy with a 1.5 s "Copied" confirmation.
-
-And many more, including code architecture and reusability.
-
-## <a name="quick-start">🤸 Quick Start</a>
-
-Follow these steps to set up the project locally on your machine.
-
-**Prerequisites**
-
-Make sure you have the following installed on your machine:
-
-- [Git](https://git-scm.com/)
-- [Node.js](https://nodejs.org/en)
-- [npm](https://www.npmjs.com/) (Node Package Manager)
-
-**Cloning the Repository**
+**Prerequisites:** [Git](https://git-scm.com/), [Node.js](https://nodejs.org/) ≥ 20, [npm](https://www.npmjs.com/).
 
 ```bash
-git clone https://github.com/adrianhajdin/ghost-ai.git
-cd ghost-ai
-```
-
-**Installation**
-
-Install the project dependencies using npm:
-
-```bash
+git clone https://github.com/srinivasprabhas/Arch-AI.git
+cd Arch-AI
 npm install
 ```
 
-**Set Up Environment Variables**
-
-Create a new file named `.env` in the root of your project and add the following content:
+**Environment variables** — create `.env.local` in the project root:
 
 ```env
 # Clerk
@@ -89,80 +95,97 @@ CLERK_SECRET_KEY=
 NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
 NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
 
+# Liveblocks
 LIVEBLOCKS_SECRET_KEY=
 
+# Trigger.dev (only needed if you want the AI tasks to run)
 TRIGGER_SECRET_KEY=
 NEXT_PUBLIC_TRIGGER_PUBLIC_API_KEY=
 
+# Database (Postgres — Prisma Postgres / Neon / Supabase / self-hosted)
 DATABASE_URL=
 
-━━━━━━━━━━━━━━━━━━━━
-# Google
-GOOGLE_GENERATIVE_AI_API_KEY=
-# Optional: override the default Gemini model (default: gemini-2.0-flash)
-GEMINI_MODEL=
-# Optional: override model used specifically for spec generation
-GEMINI_SPEC_MODEL=
+# Vercel Blob (private store; PUT/GET use the read-write token)
+BLOB_READ_WRITE_TOKEN=
 
-━━━━━━━━━━━━━━━━━━━━
+# Google AI (only needed if you want the AI tasks to run)
+GOOGLE_AI_API_KEY=
+
 APP_URL=http://localhost:3000
 ```
 
-Replace the placeholder values with your real credentials. You can get these by signing up at: [**Clerk**](https://jsm.dev/ghost-clerk), [**Liveblocks**](https://jsm.dev/ghost-liveblocks), [**Trigger.dev**](https://jsm.dev/ghost-triggerdev), [**Google AI Studio**](https://aistudio.google.com/).
+Sign up for credentials at [Clerk](https://clerk.com/), [Liveblocks](https://liveblocks.io/), [Trigger.dev](https://trigger.dev/), [Vercel Blob](https://vercel.com/storage/blob), and [Google AI Studio](https://aistudio.google.com/).
 
-**Running the Project**
+**Database setup:**
+
+```bash
+npx prisma migrate deploy
+npx prisma generate
+```
+
+**Run it:**
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser to view the project.
+Open [http://localhost:3000](http://localhost:3000). Sign in. You land on `/dashboard`.
 
-**Run Trigger.dev (Background Tasks)**
-
-In a second terminal, start the Trigger.dev dev worker so background AI tasks execute locally:
+**(Optional) Run the Trigger.dev worker for AI tasks** — in a separate terminal:
 
 ```bash
-npx trigger.dev@latest dev
+npm run trigger:dev
 ```
 
-## Available Scripts
+> ⚠️ If you skip the Trigger.dev worker + `GOOGLE_AI_API_KEY`, the canvas, multiplayer, persistence, sharing, and dashboard all still work — only the AI sidebar buttons will error.
 
-| Command                   | Description                           |
-| ------------------------- | ------------------------------------- |
-| `npm run dev`             | Start Next.js development server      |
-| `npm run build`           | Build for production                  |
-| `npm run start`           | Start production server               |
-| `npm run lint`            | Run ESLint                            |
-| `npm run prisma:generate` | Regenerate Prisma client              |
-| `npm run prisma:migrate`  | Create and apply a new migration      |
-| `npm run prisma:deploy`   | Apply pending migrations (production) |
-| `npm run prisma:studio`   | Open Prisma Studio GUI                |
+## 📜 Available Scripts
 
----
+| Command | Description |
+|---|---|
+| `npm run dev` | Start Next.js development server (Turbopack) |
+| `npm run build` | Production build (runs `prisma generate` first) |
+| `npm run start` | Start production server |
+| `npm run lint` | ESLint |
+| `npm run trigger:dev` | Run Trigger.dev local worker (AI tasks) |
+| `npm run trigger:deploy` | Deploy Trigger.dev tasks |
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 .
 ├── app/
-│   ├── api/              # Next.js API routes (auth, AI, projects, specs)
-│   ├── editor/           # Canvas editor pages
-│   ├── generated/prisma/ # Auto-generated Prisma client
-│   ├── sign-in/          # Clerk sign-in page
-│   └── sign-up/          # Clerk sign-up page
+│   ├── (auth)/             # Clerk sign-in / sign-up
+│   ├── (dashboard)/        # /dashboard, /projects, /shared
+│   ├── (editor)/editor/    # /editor/[projectId] — the canvas
+│   ├── api/                # Project, canvas, collaborators, share, AI, Liveblocks auth routes
+│   └── generated/prisma/   # Generated Prisma client
 ├── components/
-│   ├── editor/           # Canvas UI components (editor, sidebar, AI chat)
-│   └── ui/               # Reusable shadcn/ui primitives
-├── data/
-│   ├── canvas/           # Auto-saved React Flow graph JSON per project
-│   └── specs/            # Generated Markdown specs per project
-├── docs/                 # Project documentation
-├── hooks/                # Custom React hooks (auto-save, keyboard shortcuts)
-├── lib/                  # Shared utilities (Prisma client, Liveblocks, AI agents)
-├── prisma/               # Prisma schema and migrations
-├── trigger/              # Trigger.dev background task definitions
-│   ├── design-agent.ts   # AI canvas generation task
-│   └── generate-spec-gemini.ts  # AI spec generation task
-└── types/                # Shared TypeScript types
+│   ├── dashboard/          # Sidebar, project cards, template cards
+│   ├── editor/             # Canvas, navbar, tool bar, share dialog, AI sidebar
+│   └── ui/                 # shadcn primitives
+├── context/                # Feature specs + progress tracker (working notes)
+├── hooks/                  # use-workspace, use-canvas-autosave, use-keyboard-shortcuts, etc.
+├── lib/
+│   ├── prisma.ts           # Prisma client
+│   ├── project-access.ts   # owner / editor / viewer role resolution
+│   ├── projects.ts         # Project queries (owned / shared)
+│   ├── templates/          # Starter template registry
+│   └── liveblocks.ts       # Liveblocks server client + cursor color
+├── prisma/
+│   ├── models/             # Multi-file Prisma schema
+│   └── migrations/         # SQL migrations
+├── src/trigger/            # Trigger.dev background tasks (design agent, spec generation)
+└── types/                  # Shared types (CanvasNode, CanvasEdge, StarterTemplate, tasks)
 ```
+
+## 🗺️ Roadmap (what's worth fixing next)
+
+- **AI quality** — better prompts, graph-aware layout, clarifying-question agent, diagram critique, persistence of chat history. Today's AI features are stubs, not the product.
+- **Per-collaborator role downgrade in the invite UI** — currently every email invite is `EDITOR`; viewer-only invites only happen via the public link.
+- **A "Shared" card chip** showing whether you're an editor or viewer at a glance.
+- **Server-side enforcement of `?view=read-only`** at the URL layer (today the canvas already enforces via Liveblocks `READ_ACCESS`; the URL param is decorative).
+
+## License
+
+MIT

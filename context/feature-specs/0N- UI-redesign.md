@@ -1,217 +1,57 @@
-### Goal 
-Redesign the editor UI into a modern floating canvas-first experience inspired by tools like Excalidraw while preserving the existing editor architecture.
+this is the ui redesign and adding and editing features  for inside the canvas
 
-This redesign focuses only on:
+remove the background for avatars, only show avatars 
 
-- floating navbar
-- floating sidebar interactions
-- avatar placement
-- menu systems
-- visual hierarchy
-- floating surface system
-- canvas-first layout behavior
+on opening a project along with text connecting add a spinner and make the connecting... text larger
 
-Do not focus on previous implementation memory or unrelated editor logic
+### sidebar
+- use side bar from shadcn npx shadcn@latest add sidebar already installed
+- use the same UI from sidebar as in /dashboard
+- add dropdowns icon for the titles projects and shared and inside the dropdown show the projects that are there , only clicking on down arrow should open dropdown 
+clicking on projects should go to /projects
+clicking on projects should go to /shared
 
-# Branch Rules
+## in menu  
+- change rename scene to rename project , on clicking open a dialog box to rename same as the dashboard, reuse it, also change text in /dashboard from rename scene to rename project
+- make export image functional, show a dialog box showing the image and copy button 
+the bottom with icon , on clicking copy should copy to clip board
 
-Create a dedicated branch before starting.
+## templates
+- in templates change the import button color to primary
 
-## Suggested branch:
+## avatars
+- keep the avatars in color, don't need them in black and white
+- on clicking avatars show simple menu with the icon of the user in color and their name
 
-```bash
-git checkout -b redesign/floating-editor-ui
-```
+## share 
+- change colors from cyan to primary color
+- add a public link feature where clicking on it can share canvas with view only access, make the dialog neat and easy to understand
 
-All redesign work must stay isolated inside this branch until stable.
+### mini map
+- on the top right corner of the minimap , keep a small button to hide minimap and remove the minimap from the canvas, keep a less visible icon with 2 up arrows after hiding on minimap and on hover highlight it and on clicking make the minimap visible again
 
-- allowed to rewrite the @ui-context.md file
-- use shadcn and lucide as instructed
+## shapes floating bar
+redesign entireley
+[ [select] [Hand] [shapes] [eraser] ]
+- select: use square-dashed-mouse-pointer icon from lucide and clicking on it should functin to select inside the canvas, we have the shift + enter already designed use it and wire it accordingly
+- hand: use hand icon from lucide clicking on hand should be for panning, we already have the function designed , wire it accordingly
+- shapes: use shapes icon from lucide , hovering should show all the shapes that we currently have in a grid 
+- eraser: use eraser icon from lucide, clicking should function to erase the node or edge, already have the function for backspace and delete wire it accordingly
+- use the same hover effects that are currently there use dull version of primary color used in side bar in /dashboard to show selected icon 
 
-
-- npx skills add shadcn/ui are already added
-- npm install lucide@next is already added
-
-Use the following design tokens globally.
-| Purpose          | Color           | Hex       |
-| ---------------- | --------------- | --------- |
-| Primary          | Electric Purple | `#8B5CF6` |
-| Primary Hover    | Soft Purple     | `#A78BFA` |
-| Primary Pressed  | Deep Purple     | `#7C3AED` |
-| Background       | Rich Dark       | `#0F0F12` |
-| Surface          | Card Dark       | `#18181C` |
-| Elevated Surface | Layer Dark      | `#23232A` |
-| Border           | Subtle Border   | `#2E2E36` |
-| Text Primary     | Soft White      | `#F3F4F6` |
-| Text Secondary   | Gray            | `#9CA3AF` |
-| Success          | Emerald         | `#10B981` |
-| Error            | Rose Red        | `#EF4444` |
-
-- for shadow glow  Use this glow consistently for active floating elements:
-`box-shadow: 0 0 24px rgba(139, 92, 246, 0.35);`
-- Avoid:
-    - giant blurs
-    - excessive neon
-    - heavy layered shadows
-    glow should remain sublte and premium 
+## Ai sidebar
+- while opening the sidebar, slide the elements on the to right along with the side bar, similar to mini map movement
 
 
 
-### Navbar
-
-# Navbar Layout
-[left controls]     [center optional space]     [right controls]
-
-use:
-    - flex
-    - gap spacing
-    - floating groups
-
-
-
-- keep all the elements floating remove the visible navbar and alter as specified below
-- to the left use the same sidebar icons from lucide `panel-right-close` and `panel-right-open`
-- to the right of sidebar icon, add a dropdown menu icon from lucide `menu`
-    in the menu add the below options and use `npx shadcn@latest add dropdown-menu`, use icons
-    menu items:
-        | Action       | Suggested Icon |
-        | ------------ | -------------- |
-        | Rename Scene | Pencil         |
-        | Copy Room ID | Copy           |
-        | Export Image | ImageDown      |
-        | Share        | Share2         |
-
-
-# Project Name Editing
-
-## To the right of menu icon:
-
-- Display project title as:
-  - *inline editable text*
-  - *canvas-native interaction*
-
-## Project Title States
-- **Default**
-  - `text-[#F3F4F6]`
-- **Hover**
-  - Text transitions to: `#8B5CF6`
-  - Add:
-    - smooth color transition
-    - underline fade
-- **Active Editing**
-  - When clicked:
-    - select entire text
-    - editable inline
-    - underline visible
-    - transparent background
-    - no input borders
-  
-### Style:
-- border-none
-- outline-none
-- bg-transparent
-- underline
-
-## Saved Status Indicator
-- Remove text-based save status.
-- Replace with:
-  - floating icon-only state
-  
- 
-### Save Status Behavior:
-- **Idle Saved:** Small muted check icon.
-  
-tooltip: "Saved"
-hover tooltip: "Saving"
-to indicate subtle spinner animation.
- 
-### Error:
-display in rose red color.
-tooltip: "Sync failed"
-
-- Navbar should not span edge-to-edge.
-- use: 
-    - floating container
-    - internal grouped sections
-
-
-
-
-# Navbar Right Section
-
-## Order:
-- avatars → templates → share → AI → profile
-
-*Keep spacing tight.*
-
-## Avatar Group
-
-### Place avatars:
-- Left of templates button
-- Inside floating navbar
-
-## Avatar Rules
-
-Use provided avatar group structure.
-
-### Requirements:
-- Grayscale inactive avatars
-- Hover restores color
-- Overlap spacing
-- Subtle border ring
-
-## Avatar Styling
-
-Use:
-```plaintext
-gring-2 ring-[#18181C]
-```
-Maintain consistency with dark canvas.
-
-## Avatar Overflow
-When collaborators exceed visible limit:
-- Use compact count chip
-- Keep it circular
- - Elevated surface background  
-Example: +3
-
-- use the below code for avatar group
-
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarGroup,
-  AvatarGroupCount,
-  AvatarImage,
-} from "@/components/ui/avatar"
-
-export function AvatarGroupCountExample() {
-  return (
-    <AvatarGroup className="grayscale">
-      <Avatar>
-        <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-        <AvatarFallback>CN</AvatarFallback>
-      </Avatar>
-      <Avatar>
-        <AvatarImage src="https://github.com/maxleiter.png" alt="@maxleiter" />
-        <AvatarFallback>LR</AvatarFallback>
-      </Avatar>
-      <Avatar>
-        <AvatarImage
-          src="https://github.com/evilrabbit.png"
-          alt="@evilrabbit"
-        />
-        <AvatarFallback>ER</AvatarFallback>
-      </Avatar>
-      <AvatarGroupCount>+3</AvatarGroupCount>
-    </AvatarGroup>
-  )
-}
-
-
-sync the functionalities of the changes mentioned, all the functionalities already exist
-
-keep all the others same
-do not change anything else
-this is strictly a UI change only
-do not change backend logic or canvas state
+sync the colors used on the branch
+use buttons, button groups,drop-down menu,input,popover,separator,sidebar,spinner from shadcn in the entire repository whereever needed and change and add them globally in this branch
+- npx shadcn@latest add button already installed
+- npx shadcn@latest add button-group already installed
+- npx shadcn@latest add dialog already installed
+- npx shadcn@latest add dropdown-menu already installed
+- npx shadcn@latest add input already installed
+- npx shadcn@latest add popover already installed
+- npx shadcn@latest add separator already installed
+- npx shadcn@latest add sidebar already installed
+- npx shadcn@latest add spinner already installed
