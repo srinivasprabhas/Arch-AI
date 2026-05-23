@@ -8,7 +8,7 @@ export default function SignInPage() {
         <AuthLeftPanel />
       </div>
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6">
-        <SignIn />
+        <SignIn forceRedirectUrl="/dashboard" signUpForceRedirectUrl="/dashboard" />
       </div>
     </div>
   )

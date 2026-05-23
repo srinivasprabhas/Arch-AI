@@ -16,7 +16,6 @@ import {
   Sparkles,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { UserButton } from "@clerk/nextjs"
 
 import { CollaboratorAvatars } from "@/components/editor/collaborator-avatars"
 import {
@@ -32,13 +31,13 @@ import { cn } from "@/lib/utils"
 const PROJECT_SIDEBAR_WIDTH = 288
 
 const FLOATING_GROUP =
-  "flex items-center rounded-xl border border-[#2E2E36] bg-[#18181C]/85 backdrop-blur-md shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
+  "flex items-center rounded-lg border border-[#2E2E36] bg-[#18181C]/85 backdrop-blur-md shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
 
 const ICON_BUTTON =
-  "inline-flex h-8 w-8 items-center justify-center rounded-xl text-[#9CA3AF] transition-colors duration-150 ease-out hover:text-[#F3F4F6] hover:bg-[#23232A]"
+  "inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] transition-colors duration-150 ease-out hover:text-[#F3F4F6] hover:bg-[#23232A]"
 
 const TEXT_BUTTON =
-  "inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-sm text-[#9CA3AF] transition-colors duration-150 ease-out hover:text-[#F3F4F6] hover:bg-[#23232A]"
+  "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-[#9CA3AF] transition-colors duration-150 ease-out hover:text-[#F3F4F6] hover:bg-[#23232A]"
 
 export function EditorNavbar() {
   const {
@@ -93,7 +92,7 @@ export function EditorNavbar() {
         )}
 
         {project && (
-          <div className={cn(FLOATING_GROUP, "px-3 py-1.5 gap-2")}>
+          <div className="flex items-center gap-2 px-3 py-1.5">
             <ProjectTitle
               projectId={project.id}
               name={project.name}
@@ -111,12 +110,16 @@ export function EditorNavbar() {
               <CollaboratorAvatars />
             </div>
 
-            <div className={cn(FLOATING_GROUP, "px-1 py-1")}>
+            <div className={FLOATING_GROUP}>
               <button
                 type="button"
                 onClick={openStarterTemplates}
                 aria-label="Open starter templates"
-                className={TEXT_BUTTON}
+                className={cn(
+                  "inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs",
+                  "text-[#9CA3AF] transition-colors duration-150 ease-out",
+                  "hover:text-[#F3F4F6] hover:bg-[#23232A]",
+                )}
               >
                 <LayoutTemplate className="h-4 w-4" />
                 <span className="hidden sm:inline">Templates</span>
@@ -153,10 +156,6 @@ export function EditorNavbar() {
             </div>
           </>
         )}
-
-        <div className={cn(FLOATING_GROUP, "px-1.5 py-1")}>
-          <UserButton />
-        </div>
       </div>
     </div>
   )
@@ -303,7 +302,7 @@ function ProjectMenu({
         align="start"
         sideOffset={8}
         className={cn(
-          "min-w-[180px] rounded-2xl border border-[#2E2E36] bg-[#18181C]/95 backdrop-blur-md",
+          "min-w-[180px] rounded-xl border border-[#2E2E36] bg-[#18181C]/95 backdrop-blur-md",
           "p-1.5 text-[#F3F4F6] shadow-[0_12px_32px_rgba(0,0,0,0.55)]",
         )}
       >
@@ -348,7 +347,7 @@ function MenuItemRow({
         onSelect()
       }}
       className={cn(
-        "flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm cursor-pointer",
+        "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm cursor-pointer",
         "text-[#F3F4F6] focus:bg-[#23232A] focus:text-[#F3F4F6]",
         "transition-colors duration-150 ease-out",
       )}

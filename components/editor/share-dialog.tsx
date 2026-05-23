@@ -34,7 +34,7 @@ export function ShareDialog() {
   )
 }
 
-function ShareDialogInner({
+export function ShareDialogInner({
   projectId,
   open,
   onClose,

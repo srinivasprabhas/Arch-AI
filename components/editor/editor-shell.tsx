@@ -126,14 +126,14 @@ function HomeFloatingChrome({
       className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between gap-3 px-4 pt-4"
     >
       <div
-        className="pointer-events-auto flex items-center rounded-xl border border-[#2E2E36] bg-[#18181C]/85 backdrop-blur-md shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
+        className="pointer-events-auto flex items-center rounded-lg border border-[#2E2E36] bg-[#18181C]/85 backdrop-blur-md shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
         style={leftSlideStyle}
       >
         <button
           type="button"
           onClick={onToggleSidebar}
           aria-label={isSidebarOpen ? "Close project sidebar" : "Open project sidebar"}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-[#9CA3AF] transition-colors duration-150 ease-out hover:text-[#F3F4F6] hover:bg-[#23232A]"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] transition-colors duration-150 ease-out hover:text-[#F3F4F6] hover:bg-[#23232A]"
         >
           {isSidebarOpen ? (
             <PanelRightOpen className="h-5 w-5" />
@@ -143,7 +143,7 @@ function HomeFloatingChrome({
         </button>
       </div>
 
-      <div className="pointer-events-auto flex items-center rounded-xl border border-[#2E2E36] bg-[#18181C]/85 backdrop-blur-md shadow-[0_8px_24px_rgba(0,0,0,0.4)] px-1.5 py-1">
+      <div className="pointer-events-auto flex items-center rounded-lg border border-[#2E2E36] bg-[#18181C]/85 backdrop-blur-md shadow-[0_8px_24px_rgba(0,0,0,0.4)] px-1.5 py-1">
         <UserButton />
       </div>
     </div>

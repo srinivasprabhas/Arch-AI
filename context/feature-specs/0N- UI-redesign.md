@@ -1,217 +1,40 @@
-### Goal 
-Redesign the editor UI into a modern floating canvas-first experience inspired by tools like Excalidraw while preserving the existing editor architecture.
+work in the same branch
 
-This redesign focuses only on:
+The current opening redirects to /editor after signing in. We'll change that. We don't want to redirect it to /editor. We'll make /dashboard as a new route 
 
-- floating navbar
-- floating sidebar interactions
-- avatar placement
-- menu systems
-- visual hierarchy
-- floating surface system
-- canvas-first layout behavior
+refer @C:\Users\p8900\Desktop\arch-ai\context\Images\Screenshot 2026-05-23 114704.png
 
-Do not focus on previous implementation memory or unrelated editor logic
+Once the user enters the website and after signing in, he should be redirected to /dashboard, where he can see the dashboard as per the image that I've described. The sidebar is always open. It has the name of that person and it has dashboard, projects, and shared buttons on the left there should be an icon and the text and it should highlight. The side bar should always stay open and the side bar should highlight whatever route we are in. 
+The bottom of the sidebar contains the account, remove the account from inside the canvas and keep it to the left of the sidebar in the bottom with the avatar and name
 
-# Branch Rules
+The dashboard page contains the dashboard title and to the right we have a button that says "Create new project". Below that we have the templates, which are ready-made templates that we have made. The template section is slidable and only has one row, which has the cards view
 
-Create a dedicated branch before starting.
+All the views of the projects and templates should be in card views displaying what's inside, similar to that of a mini-map function. 
 
-## Suggested branch:
+The top section would be the dashboard, the button to the right, followed by a line with less opacity and subheading type templates to the left and 4 cards by default having templates
 
-```bash
-git checkout -b redesign/floating-editor-ui
-```
-
-All redesign work must stay isolated inside this branch until stable.
-
-- allowed to rewrite the @ui-context.md file
-- use shadcn and lucide as instructed
+And then followed by a line. The next section would be your project. As you can see, all the projects, the grid should have four columns and in one line we can have four cards containing each project. Each card has a project and the name below it and it could be expanded to any number of projects. As the number of projects grows, the number of rows keeps adding. Below that we should show projects with active collaboration where the projects are shown only when there are active collaborators inside the canvas. 
 
 
-- npx skills add shadcn/ui are already added
-- npm install lucide@next is already added
+And in the sidebar clicking on the project shows the only project section and the shared project shows the shared section, shared project section, where we see the projects shared with us
 
-Use the following design tokens globally.
-| Purpose          | Color           | Hex       |
-| ---------------- | --------------- | --------- |
-| Primary          | Electric Purple | `#8B5CF6` |
-| Primary Hover    | Soft Purple     | `#A78BFA` |
-| Primary Pressed  | Deep Purple     | `#7C3AED` |
-| Background       | Rich Dark       | `#0F0F12` |
-| Surface          | Card Dark       | `#18181C` |
-| Elevated Surface | Layer Dark      | `#23232A` |
-| Border           | Subtle Border   | `#2E2E36` |
-| Text Primary     | Soft White      | `#F3F4F6` |
-| Text Secondary   | Gray            | `#9CA3AF` |
-| Success          | Emerald         | `#10B981` |
-| Error            | Rose Red        | `#EF4444` |
+Each card functions as an access to canvas so clicking on that project should open the canvas and go to /editor route page. 
 
-- for shadow glow  Use this glow consistently for active floating elements:
-`box-shadow: 0 0 24px rgba(139, 92, 246, 0.35);`
-- Avoid:
-    - giant blurs
-    - excessive neon
-    - heavy layered shadows
-    glow should remain sublte and premium 
+The projects and the shared buttons functions are already there so you use them accordingly. Check the existing functions first and then implement accordingly. 
 
 
+The create new project button functions as a create new project and temporarily keep the project name as "unassigned" after creating a new project. Directly redirect them to the editor created with the name "unassigned" or "untitled scene" so they can edit later. If they create a new one, keep the name as "untitled scene 2" or "untitled 2" or "unnamed 2", so "unassigned 2". 
 
-### Navbar
+And in the project card in the dashboard page, projects page and Shared project The card should  display what is inside with respective colors inside the canvas 
 
-# Navbar Layout
-[left controls]     [center optional space]     [right controls]
+new routes will be
 
-use:
-    - flex
-    - gap spacing
-    - floating groups
+/dashboard 
+/projects
+/shared
 
-
-
-- keep all the elements floating remove the visible navbar and alter as specified below
-- to the left use the same sidebar icons from lucide `panel-right-close` and `panel-right-open`
-- to the right of sidebar icon, add a dropdown menu icon from lucide `menu`
-    in the menu add the below options and use `npx shadcn@latest add dropdown-menu`, use icons
-    menu items:
-        | Action       | Suggested Icon |
-        | ------------ | -------------- |
-        | Rename Scene | Pencil         |
-        | Copy Room ID | Copy           |
-        | Export Image | ImageDown      |
-        | Share        | Share2         |
-
-
-# Project Name Editing
-
-## To the right of menu icon:
-
-- Display project title as:
-  - *inline editable text*
-  - *canvas-native interaction*
-
-## Project Title States
-- **Default**
-  - `text-[#F3F4F6]`
-- **Hover**
-  - Text transitions to: `#8B5CF6`
-  - Add:
-    - smooth color transition
-    - underline fade
-- **Active Editing**
-  - When clicked:
-    - select entire text
-    - editable inline
-    - underline visible
-    - transparent background
-    - no input borders
-  
-### Style:
-- border-none
-- outline-none
-- bg-transparent
-- underline
-
-## Saved Status Indicator
-- Remove text-based save status.
-- Replace with:
-  - floating icon-only state
-  
+In the sidebar at the top, we display the name. By clicking the name, double-clicking down, they can change the name.
  
-### Save Status Behavior:
-- **Idle Saved:** Small muted check icon.
-  
-tooltip: "Saved"
-hover tooltip: "Saving"
-to indicate subtle spinner animation.
- 
-### Error:
-display in rose red color.
-tooltip: "Sync failed"
 
-- Navbar should not span edge-to-edge.
-- use: 
-    - floating container
-    - internal grouped sections
-
-
-
-
-# Navbar Right Section
-
-## Order:
-- avatars → templates → share → AI → profile
-
-*Keep spacing tight.*
-
-## Avatar Group
-
-### Place avatars:
-- Left of templates button
-- Inside floating navbar
-
-## Avatar Rules
-
-Use provided avatar group structure.
-
-### Requirements:
-- Grayscale inactive avatars
-- Hover restores color
-- Overlap spacing
-- Subtle border ring
-
-## Avatar Styling
-
-Use:
-```plaintext
-gring-2 ring-[#18181C]
-```
-Maintain consistency with dark canvas.
-
-## Avatar Overflow
-When collaborators exceed visible limit:
-- Use compact count chip
-- Keep it circular
- - Elevated surface background  
-Example: +3
-
-- use the below code for avatar group
-
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarGroup,
-  AvatarGroupCount,
-  AvatarImage,
-} from "@/components/ui/avatar"
-
-export function AvatarGroupCountExample() {
-  return (
-    <AvatarGroup className="grayscale">
-      <Avatar>
-        <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-        <AvatarFallback>CN</AvatarFallback>
-      </Avatar>
-      <Avatar>
-        <AvatarImage src="https://github.com/maxleiter.png" alt="@maxleiter" />
-        <AvatarFallback>LR</AvatarFallback>
-      </Avatar>
-      <Avatar>
-        <AvatarImage
-          src="https://github.com/evilrabbit.png"
-          alt="@evilrabbit"
-        />
-        <AvatarFallback>ER</AvatarFallback>
-      </Avatar>
-      <AvatarGroupCount>+3</AvatarGroupCount>
-    </AvatarGroup>
-  )
-}
-
-
-sync the functionalities of the changes mentioned, all the functionalities already exist
-
-keep all the others same
-do not change anything else
-this is strictly a UI change only
-do not change backend logic or canvas state
+### Out of scope
+ Do not touch any backend  logic. Do not do unnecessary executions . Only sync the functions at once. Do not touch the canvas except the profile of the account repososition. Reposition it into a sidebar bottom

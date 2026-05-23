@@ -30,7 +30,7 @@ export function StarterTemplatesModal({
       onOpenChange={(v) => !v && onClose()}
       title="Start from a template"
       description="Pick a pre-built diagram to replace your current canvas."
-      className="max-w-5xl"
+      className="max-w-5xl data-[state=open]:duration-0! data-[state=closed]:duration-0! data-[state=open]:animate-none! data-[state=closed]:animate-none!"
     >
       <div className="max-h-[65vh] overflow-y-auto pr-1">
         <div className="grid grid-cols-1 gap-4 py-2 sm:grid-cols-2 lg:grid-cols-3">
