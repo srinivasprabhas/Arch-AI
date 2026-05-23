@@ -20,8 +20,9 @@ export async function GET(_req: Request, { params }: RouteContext) {
     select: {
       id: true,
       ownerId: true,
+      publicViewEnabled: true,
       collaborators: {
-        select: { id: true, email: true, createdAt: true },
+        select: { id: true, email: true, role: true, createdAt: true },
         orderBy: { createdAt: "asc" },
       },
     },
@@ -38,9 +39,12 @@ export async function GET(_req: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  const enriched = await enrichEmails(project.collaborators.map((c) => c.email))
+  // Editor invites only — viewers (added by public link) are an internal
+  // tracking concern and don't need to be rendered in the share dialog.
+  const editorRows = project.collaborators.filter((c) => c.role === "EDITOR")
+  const enriched = await enrichEmails(editorRows.map((c) => c.email))
 
-  const collaborators = project.collaborators.map((c) => {
+  const collaborators = editorRows.map((c) => {
     const info = enriched.get(c.email.toLowerCase())
     return {
       id: c.id,
@@ -50,7 +54,11 @@ export async function GET(_req: Request, { params }: RouteContext) {
     }
   })
 
-  return NextResponse.json({ isOwner, collaborators })
+  return NextResponse.json({
+    isOwner,
+    publicViewEnabled: project.publicViewEnabled,
+    collaborators,
+  })
 }
 
 export async function POST(request: Request, { params }: RouteContext) {

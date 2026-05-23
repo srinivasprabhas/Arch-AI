@@ -18,17 +18,24 @@ import {
 import { useRouter } from "next/navigation"
 
 import { CollaboratorAvatars } from "@/components/editor/collaborator-avatars"
+import { ExportImageDialog } from "@/components/editor/export-image-dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useProjectDialogsContext } from "@/hooks/use-project-dialogs"
 import { useWorkspace } from "@/hooks/use-workspace"
 import type { CanvasSaveStatus } from "@/hooks/use-canvas-autosave"
 import { cn } from "@/lib/utils"
 
 const PROJECT_SIDEBAR_WIDTH = 288
+const AI_SIDEBAR_WIDTH = 320
+const AI_SIDEBAR_RIGHT_INSET = 16
+const AI_SIDEBAR_GAP = 8
+const AI_SIDEBAR_TOTAL_OFFSET =
+  AI_SIDEBAR_WIDTH + AI_SIDEBAR_RIGHT_INSET + AI_SIDEBAR_GAP
 
 const FLOATING_GROUP =
   "flex items-center rounded-lg border border-[#2E2E36] bg-[#18181C]/85 backdrop-blur-md shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
@@ -51,11 +58,29 @@ export function EditorNavbar() {
     canvasSaveStatus,
     setProject,
   } = useWorkspace()
+  const { openRename } = useProjectDialogsContext()
+  const [isExportOpen, setIsExportOpen] = useState(false)
+  const isViewer = project?.role === "viewer"
 
   const leftSlideStyle = {
     transform: `translateX(${isProjectSidebarOpen ? PROJECT_SIDEBAR_WIDTH : 0}px)`,
     transition: "transform 300ms ease-in-out",
   } as const
+
+  const rightSlideStyle = {
+    transform: `translateX(${isAiSidebarOpen ? -AI_SIDEBAR_TOTAL_OFFSET : 0}px)`,
+    transition: "transform 300ms ease-in-out",
+  } as const
+
+  const handleRenameRequest = useCallback(() => {
+    if (!project) return
+    openRename({
+      id: project.id,
+      name: project.name,
+      isOwned: true,
+      updatedAt: "",
+    })
+  }, [project, openRename])
 
   return (
     <div
@@ -81,35 +106,51 @@ export function EditorNavbar() {
           </button>
         </div>
 
-        {project && (
+        {project && !isViewer && (
           <div className={FLOATING_GROUP}>
             <ProjectMenu
               projectId={project.id}
               openShareDialog={openShareDialog}
-              onRenameRequest={() => focusProjectTitle()}
+              onRenameRequest={handleRenameRequest}
+              onExportImage={() => setIsExportOpen(true)}
             />
           </div>
         )}
 
         {project && (
           <div className="flex items-center gap-2 px-3 py-1.5">
-            <ProjectTitle
-              projectId={project.id}
-              name={project.name}
-              onUpdate={(name) => setProject({ ...project, name })}
-            />
-            <SaveStatusIcon status={canvasSaveStatus} />
+            {isViewer ? (
+              <span
+                title={project.name}
+                className="text-sm font-medium text-[#F3F4F6] truncate max-w-[16rem]"
+              >
+                {project.name}
+              </span>
+            ) : (
+              <>
+                <ProjectTitle
+                  projectId={project.id}
+                  name={project.name}
+                  onUpdate={(name) => setProject({ ...project, name })}
+                />
+                <SaveStatusIcon status={canvasSaveStatus} />
+              </>
+            )}
           </div>
         )}
       </div>
 
-      <div className="pointer-events-auto flex items-center gap-2">
+      <div
+        className="pointer-events-auto flex items-center gap-2"
+        style={rightSlideStyle}
+      >
         {project && (
+          <div className={cn(FLOATING_GROUP, "px-2 py-1")}>
+            <CollaboratorAvatars />
+          </div>
+        )}
+        {project && !isViewer && (
           <>
-            <div className={cn(FLOATING_GROUP, "px-2 py-1")}>
-              <CollaboratorAvatars />
-            </div>
-
             <div className={FLOATING_GROUP}>
               <button
                 type="button"
@@ -157,6 +198,11 @@ export function EditorNavbar() {
           </>
         )}
       </div>
+      <ExportImageDialog
+        open={isExportOpen}
+        onOpenChange={setIsExportOpen}
+        projectName={project?.name ?? "canvas"}
+      />
     </div>
   )
 }
@@ -270,10 +316,12 @@ function ProjectMenu({
   projectId,
   openShareDialog,
   onRenameRequest,
+  onExportImage,
 }: {
   projectId: string
   openShareDialog: () => void
   onRenameRequest: () => void
+  onExportImage: () => void
 }) {
   const handleCopyRoomId = useCallback(async () => {
     try {
@@ -282,10 +330,6 @@ function ProjectMenu({
       console.error("Copy room id failed", err)
     }
   }, [projectId])
-
-  const handleExportImage = useCallback(() => {
-    console.info("Export image — not implemented yet")
-  }, [])
 
   return (
     <DropdownMenu>
@@ -302,13 +346,13 @@ function ProjectMenu({
         align="start"
         sideOffset={8}
         className={cn(
-          "min-w-[180px] rounded-xl border border-[#2E2E36] bg-[#18181C]/95 backdrop-blur-md",
+          "min-w-[180px] rounded-2xl border border-[#2E2E36] bg-[#18181C]/95 backdrop-blur-md",
           "p-1.5 text-[#F3F4F6] shadow-[0_12px_32px_rgba(0,0,0,0.55)]",
         )}
       >
         <MenuItemRow
           icon={<Pencil className="h-4 w-4" />}
-          label="Rename Scene"
+          label="Rename Project"
           onSelect={onRenameRequest}
         />
         <MenuItemRow
@@ -319,7 +363,7 @@ function ProjectMenu({
         <MenuItemRow
           icon={<ImageDown className="h-4 w-4" />}
           label="Export Image"
-          onSelect={handleExportImage}
+          onSelect={onExportImage}
         />
         <MenuItemRow
           icon={<Share2 className="h-4 w-4" />}

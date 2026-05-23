@@ -37,6 +37,15 @@ import { cn } from "@/lib/utils"
 interface ProjectCardProps {
   projectId: string
   name: string
+  /**
+   * Server-provided `updatedAt` timestamp. Used as a fetch-effect dep so
+   * the card re-fetches its canvas preview whenever the server reports a
+   * newer version (e.g. after the user autosaved in the editor). Without
+   * this, navigating away + back to the dashboard shows a stale preview
+   * because React reuses the card instance and the projectId-only effect
+   * doesn't re-fire.
+   */
+  updatedAt: string
   className?: string
 }
 
@@ -45,7 +54,12 @@ interface CanvasPayload {
   edges: CanvasEdge[]
 }
 
-export function ProjectCard({ projectId, name, className }: ProjectCardProps) {
+export function ProjectCard({
+  projectId,
+  name,
+  updatedAt,
+  className,
+}: ProjectCardProps) {
   const router = useRouter()
   const [canvas, setCanvas] = useState<CanvasPayload | null>(null)
   const [status, setStatus] = useState<"loading" | "ready" | "empty" | "error">(
@@ -67,6 +81,10 @@ export function ProjectCard({ projectId, name, className }: ProjectCardProps) {
     setCurrentName(name)
   }, [name])
 
+  // Canvas preview fetch. Deps include `updatedAt` so the card refetches
+  // whenever the project's server-side timestamp moves forward — which it
+  // does on every autosave (Prisma's `@updatedAt` bumps on every Project
+  // row mutation, including the canvasJsonPath swap in the PUT route).
   useEffect(() => {
     let cancelled = false
     setStatus("loading")
@@ -79,6 +97,7 @@ export function ProjectCard({ projectId, name, className }: ProjectCardProps) {
         const data = (await res.json()) as { canvas: CanvasPayload | null }
         if (cancelled) return
         if (!data.canvas) {
+          setCanvas(null)
           setStatus("empty")
           return
         }
@@ -93,7 +112,8 @@ export function ProjectCard({ projectId, name, className }: ProjectCardProps) {
     return () => {
       cancelled = true
     }
-  }, [projectId])
+  }, [projectId, updatedAt])
+
 
   const openRename = useCallback(() => {
     setRenameDraft(currentName)
@@ -289,7 +309,7 @@ function CardMenu({
         >
           <CardMenuItem
             icon={<Pencil className="h-4 w-4" />}
-            label="Rename Scene"
+            label="Rename Project"
             onSelect={onRename}
           />
           <CardMenuItem

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 
 import { getOwnedProjects } from "@/lib/projects"
 import { CreateProjectButton } from "@/components/dashboard/create-project-button"
+import { DashboardRevalidator } from "@/components/dashboard/dashboard-revalidator"
 import { ProjectGrid } from "@/components/dashboard/project-grid"
 import { SectionHeader } from "@/components/dashboard/section-header"
 
@@ -14,6 +15,7 @@ export default async function ProjectsPage() {
 
   return (
     <div className="flex flex-col gap-8 px-8 py-8">
+      <DashboardRevalidator />
       <header className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold text-[#F3F4F6]">Projects</h1>
         <CreateProjectButton existingNames={projects.map((p) => p.name)} />

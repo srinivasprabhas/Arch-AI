@@ -4,9 +4,12 @@ import { createContext, useContext } from "react"
 
 import type { CanvasSaveStatus } from "@/hooks/use-canvas-autosave"
 
+export type WorkspaceRole = "owner" | "editor" | "viewer"
+
 export interface WorkspaceProject {
   id: string
   name: string
+  role: WorkspaceRole
 }
 
 export interface WorkspaceContextValue {

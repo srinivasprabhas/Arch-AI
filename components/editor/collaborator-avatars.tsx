@@ -11,6 +11,11 @@ import {
   AvatarGroupCount,
   AvatarImage,
 } from "@/components/ui/avatar"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 
 const MAX_VISIBLE = 4
@@ -65,28 +70,10 @@ export function CollaboratorAvatars() {
 
   return (
     <AvatarGroup
-      className="grayscale hover:grayscale-0 transition-[filter] duration-150 ease-out"
       aria-label={`${collaborators.length} collaborator${collaborators.length === 1 ? "" : "s"} active`}
     >
       {visible.map((c) => (
-        <Avatar
-          key={c.id}
-          title={c.name}
-          className={cn(
-            "h-8 w-8 ring-2 ring-[#18181C]",
-            "hover:grayscale-0 transition-[filter] duration-150 ease-out",
-          )}
-        >
-          {c.imageUrl ? (
-            <AvatarImage src={c.imageUrl} alt={c.name} />
-          ) : null}
-          <AvatarFallback
-            style={{ backgroundColor: c.color }}
-            className="text-[10px] font-semibold text-white"
-          >
-            {getInitials(c.name)}
-          </AvatarFallback>
-        </Avatar>
+        <CollaboratorAvatar key={c.id} collaborator={c} />
       ))}
       {overflow > 0 && (
         <AvatarGroupCount aria-label={`${overflow} more`}>
@@ -94,5 +81,65 @@ export function CollaboratorAvatars() {
         </AvatarGroupCount>
       )}
     </AvatarGroup>
+  )
+}
+
+function CollaboratorAvatar({ collaborator }: { collaborator: Collaborator }) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={`View ${collaborator.name}`}
+          className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8B5CF6]"
+        >
+          <Avatar
+            title={collaborator.name}
+            className={cn(
+              "h-8 w-8 ring-2 ring-[#18181C]",
+              "transition-transform duration-150 ease-out hover:scale-110",
+            )}
+          >
+            {collaborator.imageUrl ? (
+              <AvatarImage src={collaborator.imageUrl} alt={collaborator.name} />
+            ) : null}
+            <AvatarFallback
+              style={{ backgroundColor: collaborator.color }}
+              className="text-[10px] font-semibold text-white"
+            >
+              {getInitials(collaborator.name)}
+            </AvatarFallback>
+          </Avatar>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="end"
+        sideOffset={10}
+        className={cn(
+          "w-auto min-w-[180px] rounded-2xl border border-[#2E2E36] bg-[#18181C]/95",
+          "backdrop-blur-md p-2.5 shadow-[0_12px_32px_rgba(0,0,0,0.55)]",
+        )}
+      >
+        <div className="flex items-center gap-2.5">
+          <Avatar className="h-9 w-9 ring-2 ring-[#18181C]">
+            {collaborator.imageUrl ? (
+              <AvatarImage src={collaborator.imageUrl} alt={collaborator.name} />
+            ) : null}
+            <AvatarFallback
+              style={{ backgroundColor: collaborator.color }}
+              className="text-xs font-semibold text-white"
+            >
+              {getInitials(collaborator.name)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm font-medium text-[#F3F4F6] truncate">
+              {collaborator.name}
+            </span>
+            <span className="text-[11px] text-[#9CA3AF]">Active now</span>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   )
 }

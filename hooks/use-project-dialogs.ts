@@ -132,8 +132,17 @@ export function useProjectDialogs({
           body: JSON.stringify({ name: nameInput.trim() }),
         })
         if (res.ok) {
-          const project: { id: string; name: string } = await res.json()
-          setOwnedProjects((prev) => [{ id: project.id, name: project.name, isOwned: true }, ...prev])
+          const project: { id: string; name: string; updatedAt?: string } =
+            await res.json()
+          setOwnedProjects((prev) => [
+            {
+              id: project.id,
+              name: project.name,
+              isOwned: true,
+              updatedAt: project.updatedAt ?? new Date().toISOString(),
+            },
+            ...prev,
+          ])
           closeDialog()
           // project.id is used as the LiveBlocks room id (kept aligned)
           router.push(`/editor/${project.id}`)

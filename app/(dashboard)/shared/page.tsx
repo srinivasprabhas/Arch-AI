@@ -2,6 +2,7 @@ import { auth, currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 
 import { getSharedProjects } from "@/lib/projects"
+import { DashboardRevalidator } from "@/components/dashboard/dashboard-revalidator"
 import { ProjectGrid } from "@/components/dashboard/project-grid"
 import { SectionHeader } from "@/components/dashboard/section-header"
 
@@ -15,6 +16,7 @@ export default async function SharedPage() {
 
   return (
     <div className="flex flex-col gap-8 px-8 py-8">
+      <DashboardRevalidator />
       <header className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold text-[#F3F4F6]">Shared</h1>
       </header>

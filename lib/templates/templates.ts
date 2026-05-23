@@ -5,14 +5,7 @@ import {
   type CanvasNode,
   type CanvasNodeShape,
 } from "@/types/canvas"
-
-export interface CanvasTemplate {
-  id: string
-  name: string
-  description: string
-  nodes: CanvasNode[]
-  edges: CanvasEdge[]
-}
+import type { StarterTemplate } from "@/types/template"
 
 const SHAPE_DEFAULTS = Object.fromEntries(
   NODE_SHAPES.map((s) => [s.shape, { width: s.defaultWidth, height: s.defaultHeight }]),
@@ -141,12 +134,27 @@ const EVENT_EDGES: CanvasEdge[] = makeEdges("ev", [
   { source: "ev-analytics", target: "ev-metrics" },
 ])
 
-export const CANVAS_TEMPLATES: readonly CanvasTemplate[] = [
+/**
+ * Built-in starter templates. Each entry is a frozen snapshot — never mutated
+ * at runtime. The dashboard and the in-canvas template picker both read from
+ * this registry, and the server-side `from-template` endpoint resolves
+ * templates by id here too.
+ *
+ * To add a template:
+ *  1. Author the nodes/edges via `makeNode`/`makeEdges` above.
+ *  2. Append a `StarterTemplate` entry with a unique `id`, a `version: 1`
+ *     and the correct `category`.
+ *  3. Bump `version` on subsequent content changes.
+ */
+export const STARTER_TEMPLATES: readonly StarterTemplate[] = [
   {
     id: "microservices",
     name: "Microservices Architecture",
     description:
       "API gateway routing requests to independent services, each owning its own datastore.",
+    category: "system-design",
+    version: 1,
+    source: { kind: "builtin" },
     nodes: MICROSERVICES_NODES,
     edges: MICROSERVICES_EDGES,
   },
@@ -155,6 +163,9 @@ export const CANVAS_TEMPLATES: readonly CanvasTemplate[] = [
     name: "CI/CD Pipeline",
     description:
       "Build, test, gate, and deploy stages from a developer commit through staging and production.",
+    category: "devops",
+    version: 1,
+    source: { kind: "builtin" },
     nodes: CICD_NODES,
     edges: CICD_EDGES,
   },
@@ -163,6 +174,9 @@ export const CANVAS_TEMPLATES: readonly CanvasTemplate[] = [
     name: "Event-Driven System",
     description:
       "Producer emits domain events to a bus, fanned out to specialized workers and sinks.",
+    category: "system-design",
+    version: 1,
+    source: { kind: "builtin" },
     nodes: EVENT_NODES,
     edges: EVENT_EDGES,
   },

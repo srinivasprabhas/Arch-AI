@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server"
+import { revalidatePath } from "next/cache"
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
@@ -37,6 +38,10 @@ export async function POST(request: Request) {
   const project = await prisma.project.create({
     data: { ownerId: userId, name },
   })
+
+  // Keep the dashboard / projects listings fresh on soft navigation.
+  revalidatePath("/dashboard")
+  revalidatePath("/projects")
 
   return NextResponse.json(project, { status: 201 })
 }

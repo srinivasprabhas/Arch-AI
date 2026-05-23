@@ -4,6 +4,7 @@ import { useEffect } from "react"
 import { useWorkspace, type WorkspaceProject } from "@/hooks/use-workspace"
 import { AiSidebar } from "@/components/editor/ai-sidebar"
 import { EditorNavbar } from "@/components/editor/editor-navbar"
+import { ReadOnlyBanner } from "@/components/editor/read-only-banner"
 import { ShareDialog } from "@/components/editor/share-dialog"
 import { CanvasRoom } from "@/components/editor/canvas-room"
 
@@ -19,13 +20,18 @@ export function Workspace({ project }: WorkspaceProps) {
     return () => setProject(null)
   }, [project, setProject])
 
+  const isViewer = project.role === "viewer"
+
   return (
     <div className="relative h-full w-full overflow-hidden bg-base">
       <CanvasRoom roomId={project.id}>
         <EditorNavbar />
-        <AiSidebar isOpen={isAiSidebarOpen} onClose={toggleAiSidebar} />
+        {isViewer && <ReadOnlyBanner />}
+        {!isViewer && (
+          <AiSidebar isOpen={isAiSidebarOpen} onClose={toggleAiSidebar} />
+        )}
       </CanvasRoom>
-      <ShareDialog />
+      {!isViewer && <ShareDialog />}
     </div>
   )
 }

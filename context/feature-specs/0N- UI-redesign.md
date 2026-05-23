@@ -1,40 +1,57 @@
-work in the same branch
+this is the ui redesign and adding and editing features  for inside the canvas
 
-The current opening redirects to /editor after signing in. We'll change that. We don't want to redirect it to /editor. We'll make /dashboard as a new route 
+remove the background for avatars, only show avatars 
 
-refer @C:\Users\p8900\Desktop\arch-ai\context\Images\Screenshot 2026-05-23 114704.png
+on opening a project along with text connecting add a spinner and make the connecting... text larger
 
-Once the user enters the website and after signing in, he should be redirected to /dashboard, where he can see the dashboard as per the image that I've described. The sidebar is always open. It has the name of that person and it has dashboard, projects, and shared buttons on the left there should be an icon and the text and it should highlight. The side bar should always stay open and the side bar should highlight whatever route we are in. 
-The bottom of the sidebar contains the account, remove the account from inside the canvas and keep it to the left of the sidebar in the bottom with the avatar and name
+### sidebar
+- use side bar from shadcn npx shadcn@latest add sidebar already installed
+- use the same UI from sidebar as in /dashboard
+- add dropdowns icon for the titles projects and shared and inside the dropdown show the projects that are there , only clicking on down arrow should open dropdown 
+clicking on projects should go to /projects
+clicking on projects should go to /shared
 
-The dashboard page contains the dashboard title and to the right we have a button that says "Create new project". Below that we have the templates, which are ready-made templates that we have made. The template section is slidable and only has one row, which has the cards view
+## in menu  
+- change rename scene to rename project , on clicking open a dialog box to rename same as the dashboard, reuse it, also change text in /dashboard from rename scene to rename project
+- make export image functional, show a dialog box showing the image and copy button 
+the bottom with icon , on clicking copy should copy to clip board
 
-All the views of the projects and templates should be in card views displaying what's inside, similar to that of a mini-map function. 
+## templates
+- in templates change the import button color to primary
 
-The top section would be the dashboard, the button to the right, followed by a line with less opacity and subheading type templates to the left and 4 cards by default having templates
+## avatars
+- keep the avatars in color, don't need them in black and white
+- on clicking avatars show simple menu with the icon of the user in color and their name
 
-And then followed by a line. The next section would be your project. As you can see, all the projects, the grid should have four columns and in one line we can have four cards containing each project. Each card has a project and the name below it and it could be expanded to any number of projects. As the number of projects grows, the number of rows keeps adding. Below that we should show projects with active collaboration where the projects are shown only when there are active collaborators inside the canvas. 
+## share 
+- change colors from cyan to primary color
+- add a public link feature where clicking on it can share canvas with view only access, make the dialog neat and easy to understand
+
+### mini map
+- on the top right corner of the minimap , keep a small button to hide minimap and remove the minimap from the canvas, keep a less visible icon with 2 up arrows after hiding on minimap and on hover highlight it and on clicking make the minimap visible again
+
+## shapes floating bar
+redesign entireley
+[ [select] [Hand] [shapes] [eraser] ]
+- select: use square-dashed-mouse-pointer icon from lucide and clicking on it should functin to select inside the canvas, we have the shift + enter already designed use it and wire it accordingly
+- hand: use hand icon from lucide clicking on hand should be for panning, we already have the function designed , wire it accordingly
+- shapes: use shapes icon from lucide , hovering should show all the shapes that we currently have in a grid 
+- eraser: use eraser icon from lucide, clicking should function to erase the node or edge, already have the function for backspace and delete wire it accordingly
+- use the same hover effects that are currently there use dull version of primary color used in side bar in /dashboard to show selected icon 
+
+## Ai sidebar
+- while opening the sidebar, slide the elements on the to right along with the side bar, similar to mini map movement
 
 
-And in the sidebar clicking on the project shows the only project section and the shared project shows the shared section, shared project section, where we see the projects shared with us
 
-Each card functions as an access to canvas so clicking on that project should open the canvas and go to /editor route page. 
-
-The projects and the shared buttons functions are already there so you use them accordingly. Check the existing functions first and then implement accordingly. 
-
-
-The create new project button functions as a create new project and temporarily keep the project name as "unassigned" after creating a new project. Directly redirect them to the editor created with the name "unassigned" or "untitled scene" so they can edit later. If they create a new one, keep the name as "untitled scene 2" or "untitled 2" or "unnamed 2", so "unassigned 2". 
-
-And in the project card in the dashboard page, projects page and Shared project The card should  display what is inside with respective colors inside the canvas 
-
-new routes will be
-
-/dashboard 
-/projects
-/shared
-
-In the sidebar at the top, we display the name. By clicking the name, double-clicking down, they can change the name.
- 
-
-### Out of scope
- Do not touch any backend  logic. Do not do unnecessary executions . Only sync the functions at once. Do not touch the canvas except the profile of the account repososition. Reposition it into a sidebar bottom
+sync the colors used on the branch
+use buttons, button groups,drop-down menu,input,popover,separator,sidebar,spinner from shadcn in the entire repository whereever needed and change and add them globally in this branch
+- npx shadcn@latest add button already installed
+- npx shadcn@latest add button-group already installed
+- npx shadcn@latest add dialog already installed
+- npx shadcn@latest add dropdown-menu already installed
+- npx shadcn@latest add input already installed
+- npx shadcn@latest add popover already installed
+- npx shadcn@latest add separator already installed
+- npx shadcn@latest add sidebar already installed
+- npx shadcn@latest add spinner already installed

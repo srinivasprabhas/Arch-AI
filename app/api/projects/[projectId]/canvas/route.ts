@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { get, put } from "@vercel/blob"
+import { revalidatePath } from "next/cache"
 
 import { prisma } from "@/lib/prisma"
 import { checkProjectAccess } from "@/lib/project-access"
@@ -54,6 +55,15 @@ export async function PUT(request: Request, { params }: RouteContext) {
     where: { id: projectId },
     data: { canvasJsonPath: blob.url },
   })
+
+  // Invalidate the dashboard / projects / shared listing caches. The
+  // Project row's `updatedAt` just bumped (Prisma `@updatedAt` runs on
+  // every update), so the next listing fetch will see a newer timestamp
+  // and the `ProjectCard` whose `updatedAt` dep changed will re-fetch
+  // its canvas preview.
+  revalidatePath("/dashboard")
+  revalidatePath("/projects")
+  revalidatePath("/shared")
 
   return NextResponse.json({ url: blob.url })
 }

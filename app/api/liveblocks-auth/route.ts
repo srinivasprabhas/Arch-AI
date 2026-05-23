@@ -45,7 +45,14 @@ export async function POST(request: Request) {
   const session = liveblocks.prepareSession(user.id, {
     userInfo: { name, avatar, color },
   })
-  session.allow(room, session.FULL_ACCESS)
+  // Viewers (public-link visitors + role=VIEWER collaborators) get read-only
+  // access to the Liveblocks room so they can observe storage + presence but
+  // can't mutate the canvas. Owners and editors get full access.
+  if (access.role === "viewer") {
+    session.allow(room, session.READ_ACCESS)
+  } else {
+    session.allow(room, session.FULL_ACCESS)
+  }
 
   const { status, body: tokenBody } = await session.authorize()
   return new Response(tokenBody, { status })

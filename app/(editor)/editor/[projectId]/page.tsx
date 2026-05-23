@@ -19,5 +19,13 @@ export default async function WorkspacePage({ params }: WorkspacePageProps) {
     return <AccessDenied />
   }
 
-  return <Workspace project={result.project} />
+  return (
+    <Workspace
+      project={{
+        id: result.project.id,
+        name: result.project.name,
+        role: result.role,
+      }}
+    />
+  )
 }
