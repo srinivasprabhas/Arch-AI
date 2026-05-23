@@ -106,6 +106,8 @@ export function EditorShell({ children, ownedProjects, sharedProjects }: EditorS
   )
 }
 
+const HOME_PROJECT_SIDEBAR_WIDTH = 288
+
 function HomeFloatingChrome({
   isSidebarOpen,
   onToggleSidebar,
@@ -113,12 +115,20 @@ function HomeFloatingChrome({
   isSidebarOpen: boolean
   onToggleSidebar: () => void
 }) {
+  const leftSlideStyle = {
+    transform: `translateX(${isSidebarOpen ? HOME_PROJECT_SIDEBAR_WIDTH : 0}px)`,
+    transition: "transform 300ms ease-in-out",
+  } as const
+
   return (
     <div
       aria-label="Editor toolbar"
       className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between gap-3 px-4 pt-4"
     >
-      <div className="pointer-events-auto flex items-center rounded-xl border border-[#2E2E36] bg-[#18181C]/85 backdrop-blur-md shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
+      <div
+        className="pointer-events-auto flex items-center rounded-xl border border-[#2E2E36] bg-[#18181C]/85 backdrop-blur-md shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
+        style={leftSlideStyle}
+      >
         <button
           type="button"
           onClick={onToggleSidebar}

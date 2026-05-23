@@ -29,6 +29,8 @@ import { useWorkspace } from "@/hooks/use-workspace"
 import type { CanvasSaveStatus } from "@/hooks/use-canvas-autosave"
 import { cn } from "@/lib/utils"
 
+const PROJECT_SIDEBAR_WIDTH = 288
+
 const FLOATING_GROUP =
   "flex items-center rounded-xl border border-[#2E2E36] bg-[#18181C]/85 backdrop-blur-md shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
 
@@ -51,12 +53,20 @@ export function EditorNavbar() {
     setProject,
   } = useWorkspace()
 
+  const leftSlideStyle = {
+    transform: `translateX(${isProjectSidebarOpen ? PROJECT_SIDEBAR_WIDTH : 0}px)`,
+    transition: "transform 300ms ease-in-out",
+  } as const
+
   return (
     <div
       aria-label="Editor toolbar"
       className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between gap-3 px-4 pt-4"
     >
-      <div className="pointer-events-auto flex items-center gap-2">
+      <div
+        className="pointer-events-auto flex items-center gap-2"
+        style={leftSlideStyle}
+      >
         <div className={FLOATING_GROUP}>
           <button
             type="button"
@@ -70,15 +80,17 @@ export function EditorNavbar() {
               <PanelRightClose className="h-5 w-5" />
             )}
           </button>
+        </div>
 
-          {project && (
+        {project && (
+          <div className={FLOATING_GROUP}>
             <ProjectMenu
               projectId={project.id}
               openShareDialog={openShareDialog}
               onRenameRequest={() => focusProjectTitle()}
             />
-          )}
-        </div>
+          </div>
+        )}
 
         {project && (
           <div className={cn(FLOATING_GROUP, "px-3 py-1.5 gap-2")}>
@@ -99,7 +111,7 @@ export function EditorNavbar() {
               <CollaboratorAvatars />
             </div>
 
-            <div className={cn(FLOATING_GROUP, "px-1 py-1 gap-0.5")}>
+            <div className={cn(FLOATING_GROUP, "px-1 py-1")}>
               <button
                 type="button"
                 onClick={openStarterTemplates}
@@ -109,20 +121,27 @@ export function EditorNavbar() {
                 <LayoutTemplate className="h-4 w-4" />
                 <span className="hidden sm:inline">Templates</span>
               </button>
+            </div>
+
+            <div className={FLOATING_GROUP}>
               <button
                 type="button"
                 onClick={openShareDialog}
                 aria-label="Share project"
-                className={TEXT_BUTTON}
+                title="Share"
+                className={ICON_BUTTON}
               >
-                <Share2 className="h-4 w-4" />
-                <span className="hidden sm:inline">Share</span>
+                <Share2 className="h-5 w-5" />
               </button>
+            </div>
+
+            <div className={FLOATING_GROUP}>
               <button
                 type="button"
                 onClick={toggleAiSidebar}
                 aria-label={isAiSidebarOpen ? "Close AI sidebar" : "Open AI sidebar"}
                 aria-pressed={isAiSidebarOpen}
+                title="AI chat"
                 className={cn(
                   ICON_BUTTON,
                   isAiSidebarOpen &&
@@ -227,7 +246,7 @@ function ProjectTitle({
           aria-label="Project name"
           className={cn(
             "border-none outline-none bg-transparent underline",
-            "text-sm font-medium text-[#F3F4F6] truncate max-w-[16rem] min-w-[6rem]",
+            "text-sm font-medium text-[#F3F4F6] truncate max-w-[16rem] min-w-24",
           )}
         />
       ) : (
