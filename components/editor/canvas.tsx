@@ -41,7 +41,6 @@ import { CanvasCursors } from "@/components/editor/canvas-cursors"
 import { CanvasEdgeRenderer } from "@/components/editor/canvas-edge"
 import { CanvasMiniMapNode } from "@/components/editor/canvas-mini-map-node"
 import { CanvasNodeRenderer } from "@/components/editor/canvas-node"
-import { CanvasPresenceAvatars } from "@/components/editor/canvas-presence-avatars"
 import {
   NodeEditingContext,
   type NodeEditingContextValue,
@@ -474,9 +473,6 @@ function CanvasInner() {
           leftOffset={isProjectSidebarOpen ? PROJECT_SIDEBAR_WIDTH : 0}
         />
         <ShapePanel />
-        <CanvasPresenceAvatars
-          rightOffset={isAiSidebarOpen ? AI_SIDEBAR_TOTAL_OFFSET : 0}
-        />
       </ReactFlow>
       <StarterTemplatesModal
         open={isStarterTemplatesOpen}

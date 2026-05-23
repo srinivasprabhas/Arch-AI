@@ -18,6 +18,7 @@ export interface WorkspaceContextValue {
   openShareDialog: () => void
   closeShareDialog: () => void
   isProjectSidebarOpen: boolean
+  toggleProjectSidebar: () => void
   isStarterTemplatesOpen: boolean
   openStarterTemplates: () => void
   closeStarterTemplates: () => void

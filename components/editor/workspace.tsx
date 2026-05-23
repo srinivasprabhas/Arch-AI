@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { useWorkspace, type WorkspaceProject } from "@/hooks/use-workspace"
 import { AiSidebar } from "@/components/editor/ai-sidebar"
+import { EditorNavbar } from "@/components/editor/editor-navbar"
 import { ShareDialog } from "@/components/editor/share-dialog"
 import { CanvasRoom } from "@/components/editor/canvas-room"
 
@@ -21,6 +22,7 @@ export function Workspace({ project }: WorkspaceProps) {
   return (
     <div className="relative h-full w-full overflow-hidden bg-base">
       <CanvasRoom roomId={project.id}>
+        <EditorNavbar />
         <AiSidebar isOpen={isAiSidebarOpen} onClose={toggleAiSidebar} />
       </CanvasRoom>
       <ShareDialog />
